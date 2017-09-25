@@ -188,8 +188,8 @@ func main() {
 		for _, value := range s.Sample {
 			d.AddItem(value, *energyType)
 		}
-		NewNextUrl := s.Links.NextURL
-		if NewNextUrl == "" {
+		nextUrl = s.Links.NextURL
+		if nextUrl == "" {
 			hasNext = false
 			break
 		}
