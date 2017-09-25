@@ -32,7 +32,7 @@ func Bod(t time.Time) time.Time {
 
 type SamplesResponse struct {
 	Sample []SamplesResponseData `json:"data"`
-	Meta struct {
+	Meta   struct {
 		SampleInterval uint `json:"sample_interval"`
 	} `json:"meta"`
 	Links struct {
@@ -41,8 +41,8 @@ type SamplesResponse struct {
 }
 
 type SamplesResponseData struct {
-	Type string `json:"type"`
-	Id   string `json:"id"`
+	Type       string `json:"type"`
+	Id         string `json:"id"`
 	Attributes struct {
 		Timestamp             int64            `json:"timestamp"`
 		SystemTemperature     float32          `json:"system_temperature"`
@@ -70,7 +70,7 @@ func (d *Data) AddItem(value SamplesResponseData, energyType string) {
 	row := &Sample{
 		Timestamp: value.Attributes.Timestamp,
 		DateTime:  DateTime,
-		Samples: make(map[string]Reading),
+		Samples:   make(map[string]Reading),
 	}
 
 	if energyType == "power" {
@@ -91,7 +91,7 @@ func (d *Data) AddItem(value SamplesResponseData, energyType string) {
 type Sample struct {
 	Timestamp int64
 	DateTime  time.Time
-	Samples map[string]Reading
+	Samples   map[string]Reading
 }
 
 type API struct {
@@ -121,7 +121,7 @@ func (a *API) Get(url string) (SamplesResponse, error) {
 	return *s, nil
 }
 
-func (a *API) GetRequestPath (path string) string {
+func (a *API) GetRequestPath(path string) string {
 	if path != "" {
 		return path
 	}
@@ -170,7 +170,7 @@ func main() {
 		timeTo:           upper.Unix(),
 		aggregationLevel: *aggregationLevel,
 		tz:               *loc,
-		energyType:       * energyType,
+		energyType:       *energyType,
 	}
 
 	d := &Data{}
