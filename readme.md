@@ -1,6 +1,8 @@
 ## API CSV Exporter
 
-## Install
+Commandline application to export large chunks of CSV values from the API
+
+### Install
 
 ```
 go get github.com/wiesson/eb-export
@@ -8,7 +10,9 @@ cd $GOPATH/src/github.com/wiesson/eb-export
 go install
 ```
 
-Commandline application to export large chunks of CSV values from the API
+#### Binaries
+
+Coming soon
 
 ### arguments
 
