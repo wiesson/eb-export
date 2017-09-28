@@ -2,16 +2,13 @@ package main
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
-	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"time"
+	"github.com/wiesson/eb-export/samples"
 )
 
 type argsWithSameKey []string
@@ -25,115 +22,17 @@ func (a *argsWithSameKey) Set(value string) error {
 	return nil
 }
 
+func (a *argsWithSameKey) AsSlice() []string {
+	slice := []string{}
+	for _, item := range *a {
+		slice = append(*a, item)
+	}
+	return slice
+}
+
 func Bod(t time.Time) time.Time {
 	year, month, day := t.Date()
 	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
-}
-
-type SamplesResponse struct {
-	Sample []SamplesResponseData `json:"data"`
-	Meta   struct {
-		SampleInterval uint `json:"sample_interval"`
-	} `json:"meta"`
-	Links struct {
-		NextURL string `json:"next"`
-	} `json:"links"`
-}
-
-type SamplesResponseData struct {
-	Type       string `json:"type"`
-	Id         string `json:"id"`
-	Attributes struct {
-		Timestamp             int64            `json:"timestamp"`
-		SystemTemperature     float32          `json:"system_temperature"`
-		PowerResponseSamples  []ResponseSample `json:"power"`
-		EnergyResponseSamples []ResponseSample `json:"energy"`
-	} `json:"attributes"`
-}
-
-type ResponseSample struct {
-	SensorID string  `json:"sensor_id"`
-	Value    float64 `json:"value"`
-}
-
-type Reading float64
-
-func (r Reading) String() string {
-	return strconv.FormatFloat(float64(r), 'f', 8, 64)
-}
-
-type Data []Sample
-
-func (d *Data) AddItem(value SamplesResponseData, energyType string) {
-	DateTime := time.Unix(value.Attributes.Timestamp, 0)
-
-	row := &Sample{
-		Timestamp: value.Attributes.Timestamp,
-		DateTime:  DateTime,
-		Samples:   make(map[string]Reading),
-	}
-
-	if energyType == "power" {
-		for _, sample := range value.Attributes.PowerResponseSamples {
-			row.Samples[sample.SensorID] = Reading(sample.Value)
-		}
-	}
-
-	if energyType == "energy" {
-		for _, sample := range value.Attributes.EnergyResponseSamples {
-			row.Samples[sample.SensorID] = Reading(sample.Value)
-		}
-	}
-
-	*d = append(*d, *row)
-}
-
-type Sample struct {
-	Timestamp int64
-	DateTime  time.Time
-	Samples   map[string]Reading
-}
-
-type API struct {
-	baseUrl          string
-	dataLogger       string
-	sensors          argsWithSameKey
-	timeFrom         int64
-	timeTo           int64
-	aggregationLevel string
-	tz               time.Location
-	energyType       string
-}
-
-func (a *API) Get(url string) (SamplesResponse, error) {
-	res, err := http.Get(a.baseUrl + url)
-	defer res.Body.Close()
-	if err != nil {
-		return SamplesResponse{}, err
-	}
-
-	s := &SamplesResponse{}
-	err = json.NewDecoder(res.Body).Decode(s)
-	if err != nil {
-		return SamplesResponse{}, err
-	}
-
-	return *s, nil
-}
-
-func (a *API) GetRequestPath(path string) string {
-	if path != "" {
-		return path
-	}
-
-	payload := url.Values{}
-	payload.Set("aggregation_level", a.aggregationLevel)
-	payload.Add("filter[samples]", fmt.Sprintf("timestamp,%s", a.energyType))
-	payload.Add("filter[from]", strconv.FormatInt(a.timeFrom, 10))
-	payload.Add("filter[to]", strconv.FormatInt(a.timeTo, 10))
-	payload.Add("filter[data_logger]", a.dataLogger)
-	payload.Add("filter[sensor]", a.sensors.String())
-	return "/v2/samples/?" + payload.Encode()
 }
 
 func main() {
@@ -162,18 +61,18 @@ func main() {
 
 	fmt.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, *logger, len(sensors))
 
-	api := API{
-		baseUrl:          "https://api.internetofefficiency.com",
-		dataLogger:       *logger,
-		sensors:          sensors,
-		timeFrom:         lower.Unix(),
-		timeTo:           upper.Unix(),
-		aggregationLevel: *aggregationLevel,
-		tz:               *loc,
-		energyType:       *energyType,
+	api := samples.API{
+		BaseUrl:          "https://api.internetofefficiency.com",
+		DataLogger:       *logger,
+		Sensors:          sensors.AsSlice(),
+		TimeFrom:         lower.Unix(),
+		TimeTo:           upper.Unix(),
+		AggregationLevel: *aggregationLevel,
+		Tz:               *loc,
+		EnergyType:       *energyType,
 	}
 
-	d := &Data{}
+	d := &samples.Data{}
 
 	fmt.Print("Fetching data")
 
