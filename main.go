@@ -62,7 +62,6 @@ func main() {
 	fmt.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, *logger, len(sensors))
 
 	api := samples.API{
-		BaseUrl:          "https://api.internetofefficiency.com",
 		DataLogger:       *logger,
 		Sensors:          sensors.AsSlice(),
 		TimeFrom:         lower.Unix(),
@@ -72,7 +71,7 @@ func main() {
 		EnergyType:       *energyType,
 	}
 
-	d := &samples.Data{}
+	data := &samples.Data{}
 
 	fmt.Print("Fetching data")
 
@@ -80,18 +79,21 @@ func main() {
 	hasNext := true
 
 	for hasNext {
-		s, err := api.Get(nextUrl)
+		res, err := api.Get(nextUrl)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
-		for _, value := range s.Sample {
-			d.AddItem(value, *energyType)
+
+		for _, value := range res.Data {
+			data.AddItem(value, *energyType)
 		}
-		nextUrl = s.Links.NextURL
+
+		nextUrl = res.Links.NextURL
 		if nextUrl == "" {
 			hasNext = false
 			break
 		}
+
 		fmt.Print(".")
 	}
 
@@ -116,11 +118,11 @@ func main() {
 		log.Fatalln("error writing header to csv:", err)
 	}
 
-	for _, column := range *d {
+	for _, column := range *data {
 		var csvRow []string
-		csvRow = append(csvRow, column.DateTime.UTC().Format("2006-01-02 15:04:05")) // time.RFC3339 // 2006-01-02T15:04:05.999
+		csvRow = append(csvRow, column.DateTime.UTC().Format("2006-01-02 15:04:05"))
 		for _, sensorID := range sensors {
-			v := column.Samples[sensorID]
+			v := column.Readings[sensorID]
 			csvRow = append(csvRow, v.String())
 		}
 

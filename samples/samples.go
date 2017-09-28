@@ -11,10 +11,10 @@ import (
 	"compress/gzip"
 )
 
-func New() {}
+const baseUrl = "https://api.internetofefficiency.com"
+
 
 type API struct {
-	BaseUrl          string
 	DataLogger       string
 	Sensors          []string
 	TimeFrom         int64
@@ -24,22 +24,18 @@ type API struct {
 	EnergyType       string
 }
 
-type SamplesResponse struct {
-	Sample []SamplesResponseData `json:"data"`
-	Meta   struct {
-		SampleInterval uint `json:"sample_interval"`
-	} `json:"meta"`
+type Response struct {
+	Data []ResponseData `json:"data"`
 	Links struct {
 		NextURL string `json:"next"`
 	} `json:"links"`
 }
 
-type SamplesResponseData struct {
+type ResponseData struct {
 	Type       string `json:"type"`
 	Id         string `json:"id"`
 	Attributes struct {
 		Timestamp             int64            `json:"timestamp"`
-		SystemTemperature     float32          `json:"system_temperature"`
 		PowerResponseSamples  []ResponseSample `json:"power"`
 		EnergyResponseSamples []ResponseSample `json:"energy"`
 	} `json:"attributes"`
@@ -56,62 +52,63 @@ func (r Reading) String() string {
 	return strconv.FormatFloat(float64(r), 'f', 8, 64)
 }
 
+type Sample struct {
+	Timestamp int64
+	DateTime  time.Time
+	Readings  map[string]Reading
+}
+
 type Data []Sample
 
-func (d *Data) AddItem(value SamplesResponseData, energyType string) {
+func (d *Data) AddItem(value ResponseData, energyType string) {
 	DateTime := time.Unix(value.Attributes.Timestamp, 0)
 
 	row := &Sample{
 		Timestamp: value.Attributes.Timestamp,
 		DateTime:  DateTime,
-		Samples:   make(map[string]Reading),
+		Readings:  make(map[string]Reading),
 	}
 
 	if energyType == "power" {
 		for _, sample := range value.Attributes.PowerResponseSamples {
-			row.Samples[sample.SensorID] = Reading(sample.Value)
+			row.Readings[sample.SensorID] = Reading(sample.Value)
 		}
 	}
 
 	if energyType == "energy" {
 		for _, sample := range value.Attributes.EnergyResponseSamples {
-			row.Samples[sample.SensorID] = Reading(sample.Value)
+			row.Readings[sample.SensorID] = Reading(sample.Value)
 		}
 	}
 
 	*d = append(*d, *row)
 }
 
-type Sample struct {
-	Timestamp int64
-	DateTime  time.Time
-	Samples   map[string]Reading
-}
 
-func (a *API) Get(url string) (SamplesResponse, error) {
+func (a *API) Get(url string) (Response, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", a.BaseUrl+url, nil)
+	req, err := http.NewRequest("GET", baseUrl+url, nil)
 	if err != nil {
-		return SamplesResponse{}, err
+		return Response{}, fmt.Errorf("unable to create new request: %v", err)
 	}
 	req.Header.Set("Accept-Encoding", "gzip")
 
 	res, err := client.Do(req)
 	if err != nil {
-		return SamplesResponse{}, err
+		return Response{}, fmt.Errorf("unable to do API request: %v", err)
 	}
 	defer res.Body.Close()
 
-	s := &SamplesResponse{}
+	s := &Response{}
 
 	body, err :=  gzip.NewReader(res.Body)
 	if err != nil {
-		return SamplesResponse{}, err
+		return Response{}, fmt.Errorf("unable to decode gzipped resonse: %v", err)
 	}
 
 	err = json.NewDecoder(body).Decode(s)
 	if err != nil {
-		return SamplesResponse{}, err
+		return Response{}, fmt.Errorf("unable to parse JSON: %v", err)
 	}
 
 	return *s, nil
