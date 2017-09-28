@@ -1,13 +1,14 @@
 package samples
 
 import (
-	"time"
-	"net/http"
 	"encoding/json"
-	"net/url"
 	"fmt"
+	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
+	"time"
+	"compress/gzip"
 )
 
 func New() {}
@@ -22,7 +23,6 @@ type API struct {
 	Tz               time.Location
 	EnergyType       string
 }
-
 
 type SamplesResponse struct {
 	Sample []SamplesResponseData `json:"data"`
@@ -89,14 +89,27 @@ type Sample struct {
 }
 
 func (a *API) Get(url string) (SamplesResponse, error) {
-	res, err := http.Get(a.BaseUrl + url)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", a.BaseUrl+url, nil)
+	if err != nil {
+		return SamplesResponse{}, err
+	}
+	req.Header.Set("Accept-Encoding", "gzip")
+
+	res, err := client.Do(req)
+	if err != nil {
+		return SamplesResponse{}, err
+	}
 	defer res.Body.Close()
+
+	s := &SamplesResponse{}
+
+	body, err :=  gzip.NewReader(res.Body)
 	if err != nil {
 		return SamplesResponse{}, err
 	}
 
-	s := &SamplesResponse{}
-	err = json.NewDecoder(res.Body).Decode(s)
+	err = json.NewDecoder(body).Decode(s)
 	if err != nil {
 		return SamplesResponse{}, err
 	}
