@@ -4,12 +4,12 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"github.com/wiesson/eb-export/samples"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 	"time"
-	"github.com/wiesson/eb-export/samples"
-	"net/url"
 )
 
 type argsWithSameKey []string
@@ -50,6 +50,7 @@ func main() {
 	from := start.AddDate(0, 0, 1)
 
 	aggregationLevels := []string{"none", "minutes_1", "minutes_15", "hours_1", "days_1"}
+	energyTypes := []string{"power", "energy"}
 
 	cmdFrom := flag.String("from", start.Format("2006-1-2"), "The lower date")
 	cmdTo := flag.String("to", from.Format("2006-1-2"), "The upper date")
@@ -64,7 +65,14 @@ func main() {
 
 	if *aggregationLevel != aggregationLevels[3] {
 		if inSlice(*aggregationLevel, aggregationLevels) == false {
-			log.Fatal("Wrong aggregation level given. Valid are ", strings.Join(aggregationLevels, " "))
+			log.Fatal("Wrong aggregation level given. Valid are ", strings.Join(aggregationLevels, ", "))
+			os.Exit(1)
+		}
+	}
+
+	if *aggregationLevel != energyTypes[0] {
+		if inSlice(*energyType, energyTypes) == false {
+			log.Fatal("Wrong energyType given. Valid are ", strings.Join(energyTypes, ", "))
 			os.Exit(1)
 		}
 	}
@@ -96,7 +104,6 @@ func main() {
 
 	nextUrl := api.GetRequestPath("")
 	hasNext := true
-
 
 	for hasNext {
 		res, err := api.Get(nextUrl)
