@@ -65,14 +65,14 @@ func main() {
 
 	if *aggregationLevel != aggregationLevels[3] {
 		if inSlice(*aggregationLevel, aggregationLevels) == false {
-			log.Fatal("Wrong aggregation level given. Valid are ", strings.Join(aggregationLevels, ", "))
+			log.Fatal("Wrong aggregation level given. Valid levels are ", strings.Join(aggregationLevels, ", "))
 			os.Exit(1)
 		}
 	}
 
 	if *aggregationLevel != energyTypes[0] {
 		if inSlice(*energyType, energyTypes) == false {
-			log.Fatal("Wrong energyType given. Valid are ", strings.Join(energyTypes, ", "))
+			log.Fatal("Wrong energyType given. Valid types are ", strings.Join(energyTypes, ", "))
 			os.Exit(1)
 		}
 	}
