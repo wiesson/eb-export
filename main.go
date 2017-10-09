@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 	"github.com/wiesson/eb-export/samples"
+	"net/url"
 )
 
 type argsWithSameKey []string
@@ -35,9 +36,20 @@ func Bod(t time.Time) time.Time {
 	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
 }
 
+func inSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	start := Bod(time.Now().AddDate(0, 0, -2))
 	from := start.AddDate(0, 0, 1)
+
+	aggregationLevels := []string{"none", "minutes_1", "minutes_15", "hours_1", "days_1"}
 
 	cmdFrom := flag.String("from", start.Format("2006-1-2"), "The lower date")
 	cmdTo := flag.String("to", from.Format("2006-1-2"), "The upper date")
@@ -50,6 +62,13 @@ func main() {
 	flag.Var(&sensors, "sensor", "Id of the data-logger")
 	flag.Parse()
 
+	if *aggregationLevel != aggregationLevels[3] {
+		if inSlice(*aggregationLevel, aggregationLevels) == false {
+			log.Fatal("Wrong aggregation level given. Valid are ", strings.Join(aggregationLevels, " "))
+			os.Exit(1)
+		}
+	}
+
 	var loc, err = time.LoadLocation(*tz)
 	if err != nil {
 		fmt.Errorf("timezone could not be parsed: %v", err)
@@ -59,7 +78,7 @@ func main() {
 	lower, _ := time.ParseInLocation("2006-1-2", *cmdFrom, loc)
 	upper, _ := time.ParseInLocation("2006-1-2", *cmdTo, loc)
 
-	fmt.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, *logger, len(sensors))
+	log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, *logger, len(sensors))
 
 	api := samples.API{
 		DataLogger:       *logger,
@@ -73,16 +92,20 @@ func main() {
 
 	data := &samples.Data{}
 
-	fmt.Print("Fetching data")
+	log.Println("Beginn Fetching data")
 
 	nextUrl := api.GetRequestPath("")
 	hasNext := true
+
 
 	for hasNext {
 		res, err := api.Get(nextUrl)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		logMessage, err := url.ParseQuery(nextUrl)
+		log.Printf("Fetching from %s\n", logMessage.Get("page[offset]"))
 
 		for _, value := range res.Data {
 			data.AddItem(value, *energyType)
@@ -93,11 +116,9 @@ func main() {
 			hasNext = false
 			break
 		}
-
-		fmt.Print(".")
 	}
 
-	fmt.Print(" Done")
+	fmt.Print("Done")
 
 	fileName := fmt.Sprintf("%s_%s_%s_%s_%s.csv", *cmdFrom, *cmdTo, *logger, *energyType, *aggregationLevel)
 	file, err := os.Create(fileName)
@@ -137,5 +158,5 @@ func main() {
 	if err := w.Error(); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("\nCreated file: %s\n", fileName)
+	log.Printf("\nCreated file: %s\n", fileName)
 }
