@@ -56,14 +56,14 @@ func main() {
 	cmdTo := flag.String("to", from.Format("2006-1-2"), "The upper date")
 	logger := flag.String("logger", "", "Id of the data-logger")
 	tz := flag.String("tz", "UTC", "The identifier of the timezone, Europe/Berlin")
-	aggregationLevel := flag.String("aggr", "minutes_1", "Aggregation level")
-	energyType := flag.String("type", "power", "EnergyType")
+	aggregationLevel := flag.String("aggr", aggregationLevels[1], "Aggregation level")
+	energyType := flag.String("type", energyTypes[0], "EnergyType")
 
 	var sensors argsWithSameKey
 	flag.Var(&sensors, "sensor", "Id of the data-logger")
 	flag.Parse()
 
-	if *aggregationLevel != aggregationLevels[3] {
+	if *aggregationLevel != aggregationLevels[2] {
 		if inSlice(*aggregationLevel, aggregationLevels) == false {
 			log.Fatal("Wrong aggregation level given. Valid levels are ", strings.Join(aggregationLevels, ", "))
 			os.Exit(1)
