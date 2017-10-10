@@ -4,7 +4,7 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
-	"github.com/wiesson/eb-export/samples"
+	"github.com/wiesson/eb-export/api"
 	"log"
 	"net/url"
 	"os"
@@ -88,7 +88,7 @@ func main() {
 
 	log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, *logger, len(sensors))
 
-	api := samples.API{
+	apiHandler := api.Config{
 		DataLogger:       *logger,
 		Sensors:          sensors.AsSlice(),
 		TimeFrom:         lower.Unix(),
@@ -98,15 +98,15 @@ func main() {
 		EnergyType:       *energyType,
 	}
 
-	data := &samples.Data{}
+	data := &api.Data{}
 
 	log.Println("Beginn Fetching data")
 
-	nextUrl := api.GetRequestPath("")
+	nextUrl := apiHandler.GetRequestPath("")
 	hasNext := true
 
 	for hasNext {
-		res, err := api.Get(nextUrl)
+		res, err := apiHandler.Get(nextUrl)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -125,7 +125,7 @@ func main() {
 		}
 	}
 
-	fmt.Print("Done")
+	log.Println("Done")
 
 	fileName := fmt.Sprintf("%s_%s_%s_%s_%s.csv", *cmdFrom, *cmdTo, *logger, *energyType, *aggregationLevel)
 	file, err := os.Create(fileName)

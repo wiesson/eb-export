@@ -1,4 +1,4 @@
-package samples
+package api
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 const baseUrl = "https://api.internetofefficiency.com"
 
 
-type API struct {
+type Config struct {
 	DataLogger       string
 	Sensors          []string
 	TimeFrom         int64
@@ -85,7 +85,7 @@ func (d *Data) AddItem(value ResponseData, energyType string) {
 }
 
 
-func (a *API) Get(url string) (Response, error) {
+func (a *Config) Get(url string) (Response, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", baseUrl+url, nil)
 	if err != nil {
@@ -114,7 +114,7 @@ func (a *API) Get(url string) (Response, error) {
 	return *s, nil
 }
 
-func (a *API) GetRequestPath(path string) string {
+func (a *Config) GetRequestPath(path string) string {
 	if path != "" {
 		return path
 	}
