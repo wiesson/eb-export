@@ -14,7 +14,7 @@ import (
 const baseUrl = "https://api.internetofefficiency.com"
 
 
-type Config struct {
+type api struct {
 	DataLogger       string
 	Sensors          []string
 	TimeFrom         int64
@@ -22,6 +22,18 @@ type Config struct {
 	AggregationLevel string
 	Tz               time.Location
 	EnergyType       string
+}
+
+func Config(DataLogger string, sensors []string, timeFrom int64, timeTo int64, aggregationLevel string, timezone time.Location, energyType string) api {
+	return api{
+		DataLogger:       DataLogger,
+		Sensors:          sensors,
+		TimeFrom:         timeFrom,
+		TimeTo:           timeTo,
+		AggregationLevel: aggregationLevel,
+		Tz:               timezone,
+		EnergyType:       energyType,
+	}
 }
 
 type Response struct {
@@ -85,7 +97,7 @@ func (d *Data) AddItem(value ResponseData, energyType string) {
 }
 
 
-func (a *Config) Get(url string) (Response, error) {
+func (a *api) Get(url string) (Response, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", baseUrl+url, nil)
 	if err != nil {
@@ -114,7 +126,7 @@ func (a *Config) Get(url string) (Response, error) {
 	return *s, nil
 }
 
-func (a *Config) GetRequestPath(path string) string {
+func (a *api) GetRequestPath(path string) string {
 	if path != "" {
 		return path
 	}

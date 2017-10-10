@@ -88,15 +88,15 @@ func main() {
 
 	log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, *logger, len(sensors))
 
-	apiHandler := api.Config{
-		DataLogger:       *logger,
-		Sensors:          sensors.AsSlice(),
-		TimeFrom:         lower.Unix(),
-		TimeTo:           upper.Unix(),
-		AggregationLevel: *aggregationLevel,
-		Tz:               *loc,
-		EnergyType:       *energyType,
-	}
+	apiHandler := api.Config(
+		*logger,
+		sensors.AsSlice(),
+		lower.Unix(),
+		upper.Unix(),
+		*aggregationLevel,
+		*loc,
+		*energyType,
+	)
 
 	data := &api.Data{}
 
