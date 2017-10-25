@@ -1,45 +1,33 @@
+// Package api provides the api communication
 package api
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"github.com/wiesson/eb-export/config"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
-	"compress/gzip"
-	"log"
 )
 
 const baseUrl = "https://api.internetofefficiency.com"
 
-
 type api struct {
-	DataLogger       string
-	Sensors          []string
-	TimeFrom         int64
-	TimeTo           int64
-	AggregationLevel string
-	Tz               time.Location
-	EnergyType       string
-	Data 			 data
+	config config.Config
+	Data   Data
 }
 
-func Config(DataLogger string, sensors []string, timeFrom int64, timeTo int64, aggregationLevel string, timezone time.Location, energyType string) api {
-	return api{
-		DataLogger:       DataLogger,
-		Sensors:          sensors,
-		TimeFrom:         timeFrom,
-		TimeTo:           timeTo,
-		AggregationLevel: aggregationLevel,
-		Tz:               timezone,
-		EnergyType:       energyType,
-	}
+// New returns an instance of api
+func New(config config.Config) api {
+	return api{config: config}
 }
 
 type response struct {
-	Data []responseData `json:"data"`
+	Data  []responseData `json:"data"`
 	Links struct {
 		NextURL string `json:"next"`
 	} `json:"links"`
@@ -72,9 +60,9 @@ type Sample struct {
 	Readings  map[string]Reading
 }
 
-type data []Sample
+type Data []Sample
 
-func (d *data) AddItem(value responseData, energyType string) {
+func (d *Data) AddItem(value responseData, energyType string) {
 	DateTime := time.Unix(value.Attributes.Timestamp, 0)
 
 	row := &Sample{
@@ -111,7 +99,7 @@ func (a *api) Fetch() []Sample {
 		log.Printf("Fetching from %s\n", logMessage.Get("page[offset]"))
 
 		for _, value := range res.Data {
-			a.Data.AddItem(value, a.EnergyType)
+			a.Data.AddItem(value, a.config.EnergyType)
 		}
 
 		nextUrl = res.Links.NextURL
@@ -140,7 +128,7 @@ func (a *api) Get(url string) (response, error) {
 
 	s := &response{}
 
-	body, err :=  gzip.NewReader(res.Body)
+	body, err := gzip.NewReader(res.Body)
 	if err != nil {
 		return response{}, fmt.Errorf("unable to decode gzipped resonse: %v", err)
 	}
@@ -159,11 +147,11 @@ func (a *api) GetRequestPath(path string) string {
 	}
 
 	payload := url.Values{}
-	payload.Set("aggregation_level", a.AggregationLevel)
-	payload.Add("filter[samples]", fmt.Sprintf("timestamp,%s", a.EnergyType))
-	payload.Add("filter[from]", strconv.FormatInt(a.TimeFrom, 10))
-	payload.Add("filter[to]", strconv.FormatInt(a.TimeTo, 10))
-	payload.Add("filter[data_logger]", a.DataLogger)
-	payload.Add("filter[sensor]", strings.Join(a.Sensors, ","))
+	payload.Set("aggregation_level", a.config.AggregationLevel)
+	payload.Add("filter[samples]", fmt.Sprintf("timestamp,%s", a.config.EnergyType))
+	payload.Add("filter[from]", strconv.FormatInt(a.config.TimeFrom, 10))
+	payload.Add("filter[to]", strconv.FormatInt(a.config.TimeTo, 10))
+	payload.Add("filter[data_logger]", a.config.DataLogger)
+	payload.Add("filter[sensor]", strings.Join(a.config.Sensors, ","))
 	return "/v2/samples/?" + payload.Encode()
 }
