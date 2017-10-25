@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/wiesson/eb-export/api"
 	"log"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -98,36 +97,12 @@ func main() {
 		*energyType,
 	)
 
-	data := &api.Data{}
-
 	log.Println("Beginn Fetching data")
-
-	nextUrl := apiHandler.GetRequestPath("")
-	hasNext := true
-
-	for hasNext {
-		res, err := apiHandler.Get(nextUrl)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		logMessage, err := url.ParseQuery(nextUrl)
-		log.Printf("Fetching from %s\n", logMessage.Get("page[offset]"))
-
-		for _, value := range res.Data {
-			data.AddItem(value, *energyType)
-		}
-
-		nextUrl = res.Links.NextURL
-		if nextUrl == "" {
-			hasNext = false
-			break
-		}
-	}
-
+	data := apiHandler.Fetch()
 	log.Println("Done")
 
 	fileName := fmt.Sprintf("%s_%s_%s_%s_%s.csv", *cmdFrom, *cmdTo, *logger, *energyType, *aggregationLevel)
+
 	file, err := os.Create(fileName)
 	if err != nil {
 		log.Fatalln("error creating result.csv", err)
@@ -146,7 +121,7 @@ func main() {
 		log.Fatalln("error writing header to csv:", err)
 	}
 
-	for _, column := range *data {
+	for _, column := range data {
 		var csvRow []string
 		csvRow = append(csvRow, column.DateTime.UTC().Format("2006-01-02 15:04:05"))
 		for _, sensorID := range sensors {
@@ -165,5 +140,5 @@ func main() {
 	if err := w.Error(); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("\nCreated file: %s\n", fileName)
+	log.Printf("Created file: %s\n", fileName)
 }
