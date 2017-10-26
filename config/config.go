@@ -19,7 +19,7 @@ type Config struct {
 	EnergyType       string
 }
 
-// New returns a new instance of
+// New returns a new instance of Config
 func New(DataLogger, energyType, aggregationLevel, timezone, cmdFrom, cmdTo string, sensors, aggregationLevels, energyTypes []string) Config {
 	if aggregationLevel != aggregationLevels[2] && inSlice(aggregationLevel, aggregationLevels) == false {
 		log.Fatal("Wrong aggregation level given. Valid levels are ", strings.Join(aggregationLevels, ", "))
@@ -53,6 +53,7 @@ func New(DataLogger, energyType, aggregationLevel, timezone, cmdFrom, cmdTo stri
 	}
 }
 
+// Flags is an helper for flags with same argument
 type Flags []string
 
 func (f *Flags) String() string {

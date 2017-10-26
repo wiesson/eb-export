@@ -16,7 +16,7 @@ type Export struct {
 }
 
 func New(data api.Data, apiConfig config.Config) Export {
-	name := GetFileName(apiConfig)
+	name := getFileName(apiConfig)
 
 	return Export{
 		sensors:  apiConfig.Sensors,
@@ -66,6 +66,6 @@ func (e *Export) Write() {
 	log.Printf("Created file: %s\n", e.fileName)
 }
 
-func GetFileName(apiConfig config.Config) string {
+func getFileName(apiConfig config.Config) string {
 	return fmt.Sprintf("%d_%d_%s_%s_%s.csv", apiConfig.TimeTo, apiConfig.TimeTo, apiConfig.DataLogger, apiConfig.EnergyType, apiConfig.AggregationLevel)
 }

@@ -48,37 +48,37 @@ type responseSample struct {
 	Value    float64 `json:"value"`
 }
 
-type Reading float64
+type reading float64
 
-func (r Reading) String() string {
+func (r reading) String() string {
 	return strconv.FormatFloat(float64(r), 'f', 8, 64)
 }
 
 type Sample struct {
 	Timestamp int64
 	DateTime  time.Time
-	Readings  map[string]Reading
+	Readings  map[string]reading
 }
 
 type Data []Sample
 
-func (d *Data) AddItem(value responseData, energyType string) {
+func (d *Data) addReading(value responseData, energyType string) {
 	DateTime := time.Unix(value.Attributes.Timestamp, 0)
 
 	row := &Sample{
 		Timestamp: value.Attributes.Timestamp,
 		DateTime:  DateTime,
-		Readings:  make(map[string]Reading),
+		Readings:  make(map[string]reading),
 	}
 
 	switch energyType {
 	case "energy":
 		for _, sample := range value.Attributes.EnergyResponseSamples {
-			row.Readings[sample.SensorID] = Reading(sample.Value)
+			row.Readings[sample.SensorID] = reading(sample.Value)
 		}
 	default:
 		for _, sample := range value.Attributes.PowerResponseSamples {
-			row.Readings[sample.SensorID] = Reading(sample.Value)
+			row.Readings[sample.SensorID] = reading(sample.Value)
 		}
 	}
 
@@ -86,11 +86,11 @@ func (d *Data) AddItem(value responseData, energyType string) {
 }
 
 func (a *api) Fetch() []Sample {
-	nextUrl := a.GetRequestPath("")
+	nextUrl := a.getRequestPath("")
 	hasNext := true
 
 	for hasNext {
-		res, err := a.Get(nextUrl)
+		res, err := a.get(nextUrl)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -99,7 +99,7 @@ func (a *api) Fetch() []Sample {
 		log.Printf("Fetching from %s\n", logMessage.Get("page[offset]"))
 
 		for _, value := range res.Data {
-			a.Data.AddItem(value, a.config.EnergyType)
+			a.Data.addReading(value, a.config.EnergyType)
 		}
 
 		nextUrl = res.Links.NextURL
@@ -112,7 +112,7 @@ func (a *api) Fetch() []Sample {
 	return a.Data
 }
 
-func (a *api) Get(url string) (response, error) {
+func (a *api) get(url string) (response, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", baseUrl+url, nil)
 	if err != nil {
@@ -141,7 +141,7 @@ func (a *api) Get(url string) (response, error) {
 	return *s, nil
 }
 
-func (a *api) GetRequestPath(path string) string {
+func (a *api) getRequestPath(path string) string {
 	if path != "" {
 		return path
 	}
