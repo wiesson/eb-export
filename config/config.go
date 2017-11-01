@@ -10,7 +10,7 @@ import (
 
 // Config contains the configuration
 type Config struct {
-	AccessToken		 string
+	AccessToken      string
 	DataLogger       string
 	Sensors          []string
 	TimeFrom         int64
@@ -49,7 +49,7 @@ func New(accessToken, DataLogger, energyType, aggregationLevel, timezone, cmdFro
 	log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, DataLogger, len(sensors))
 
 	return Config{
-		AccessToken: 	  accessToken,
+		AccessToken:      accessToken,
 		DataLogger:       DataLogger,
 		Sensors:          sensors,
 		TimeFrom:         lower.Unix(),
