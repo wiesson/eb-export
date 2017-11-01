@@ -19,7 +19,7 @@ Coming soon
 Example
 
 ```
-eb-export -token <your-access-token> -from 2017-08-01 -to 2017-09-26 -logger 5978f024ce9d0513a30000d7 -sensor 5978f024ce9d0513a300013c -sensor 5978f024ce9d0513a300013d -sensor 5978f024ce9d0513a300013e -sensor 598170a3ce9d053e4d0001e2 -aggr minutes_1 -type energy
+eb-export -token <your-access-token> -from 2017-08-01 -to 2017-09-26 -logger 01234567 -sensor 12345678 -sensor 23456789 -sensor 34567890 -sensor 45678901 -aggr minutes_1 -type energy
 ```
 
 #### -token*
@@ -40,7 +40,7 @@ example: `-logger 12345678`
 
 #### -sensor (array)*
 
-example: `-sensor 23456789` or `-sensor 23456789 -sensor 34567890`
+example: `-sensor 12345678` or `-sensor 12345678 -sensor 23456789`
 
 #### -aggr
 
