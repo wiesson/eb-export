@@ -19,8 +19,12 @@ Coming soon
 Example
 
 ```
-eb-export -from 2017-08-01 -to 2017-09-26 -logger 5978f024ce9d0513a30000d7 -sensor 5978f024ce9d0513a300013c -sensor 5978f024ce9d0513a300013d -sensor 5978f024ce9d0513a300013e -sensor 598170a3ce9d053e4d0001e2 -aggr minutes_1 -type energy
+eb-export -token <your-access-token> -from 2017-08-01 -to 2017-09-26 -logger 5978f024ce9d0513a30000d7 -sensor 5978f024ce9d0513a300013c -sensor 5978f024ce9d0513a300013d -sensor 5978f024ce9d0513a300013e -sensor 598170a3ce9d053e4d0001e2 -aggr minutes_1 -type energy
 ```
+
+#### -token*
+
+example: `-token <your-access-token>`
 
 #### -from*
 

@@ -119,6 +119,7 @@ func (a *api) get(url string) (response, error) {
 		return response{}, fmt.Errorf("unable to create new request: %v", err)
 	}
 	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.config.AccessToken))
 
 	res, err := client.Do(req)
 	if err != nil {

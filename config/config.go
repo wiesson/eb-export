@@ -10,6 +10,7 @@ import (
 
 // Config contains the configuration
 type Config struct {
+	AccessToken		 string
 	DataLogger       string
 	Sensors          []string
 	TimeFrom         int64
@@ -20,7 +21,12 @@ type Config struct {
 }
 
 // New returns a new instance of Config
-func New(DataLogger, energyType, aggregationLevel, timezone, cmdFrom, cmdTo string, sensors, aggregationLevels, energyTypes []string) Config {
+func New(accessToken, DataLogger, energyType, aggregationLevel, timezone, cmdFrom, cmdTo string, sensors, aggregationLevels, energyTypes []string) Config {
+	if accessToken == "" {
+		log.Fatal("No access token given.")
+		os.Exit(1)
+	}
+
 	if aggregationLevel != aggregationLevels[2] && inSlice(aggregationLevel, aggregationLevels) == false {
 		log.Fatal("Wrong aggregation level given. Valid levels are ", strings.Join(aggregationLevels, ", "))
 		os.Exit(1)
@@ -43,6 +49,7 @@ func New(DataLogger, energyType, aggregationLevel, timezone, cmdFrom, cmdTo stri
 	log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, DataLogger, len(sensors))
 
 	return Config{
+		AccessToken: 	  accessToken,
 		DataLogger:       DataLogger,
 		Sensors:          sensors,
 		TimeFrom:         lower.Unix(),
