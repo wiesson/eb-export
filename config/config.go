@@ -73,7 +73,7 @@ func (f *Flags) Set(value string) error {
 }
 
 func (f *Flags) Slice() []string {
-	slice := []string{}
+	var slice []string
 	for _, item := range *f {
 		slice = append(*f, item)
 	}
