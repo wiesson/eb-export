@@ -48,16 +48,10 @@ type responseSample struct {
 	Value    float64 `json:"value"`
 }
 
-type reading float64
-
-func (r reading) String() string {
-	return strconv.FormatFloat(float64(r), 'f', 8, 64)
-}
-
 type Sample struct {
 	Timestamp int64
 	DateTime  time.Time
-	Readings  map[string]reading
+	Readings  map[string]*float64
 }
 
 type Data []Sample
@@ -68,17 +62,17 @@ func (d *Data) addReading(value responseData, energyType string) {
 	row := &Sample{
 		Timestamp: value.Attributes.Timestamp,
 		DateTime:  DateTime,
-		Readings:  make(map[string]reading),
+		Readings:  make(map[string]*float64),
 	}
 
 	switch energyType {
 	case "energy":
 		for _, sample := range value.Attributes.EnergyResponseSamples {
-			row.Readings[sample.SensorID] = reading(sample.Value)
+			row.Readings[sample.SensorID] = &sample.Value
 		}
 	default:
 		for _, sample := range value.Attributes.PowerResponseSamples {
-			row.Readings[sample.SensorID] = reading(sample.Value)
+			row.Readings[sample.SensorID] = &sample.Value
 		}
 	}
 

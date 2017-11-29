@@ -7,6 +7,7 @@ import (
 	"github.com/wiesson/eb-export/config"
 	"log"
 	"os"
+	"strconv"
 )
 
 type Export struct {
@@ -49,7 +50,13 @@ func (e *Export) Write() {
 		csvRow = append(csvRow, column.DateTime.UTC().Format("2006-01-02 15:04:05"))
 		for _, sensorID := range e.sensors {
 			v := column.Readings[sensorID]
-			csvRow = append(csvRow, v.String())
+
+			if v == nil {
+				csvRow = append(csvRow, "")
+			} else {
+				csvRow = append(csvRow, strconv.FormatFloat(*v, 'f', 8, 64))
+			}
+
 		}
 
 		if err := w.Write(csvRow); err != nil {
