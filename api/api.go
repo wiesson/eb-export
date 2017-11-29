@@ -90,7 +90,11 @@ func (a *api) Fetch() []Sample {
 		}
 
 		logMessage, err := url.ParseQuery(nextUrl)
-		log.Printf("Fetching from %s\n", logMessage.Get("page[offset]"))
+		offset := logMessage.Get("page[offset]")
+
+		if offset != "" {
+			log.Printf("Fetching from %s\n", logMessage.Get("page[offset]"))
+		}
 
 		for _, value := range res.Data {
 			a.Data.addReading(value, a.config.EnergyType)
