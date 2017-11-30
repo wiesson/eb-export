@@ -74,5 +74,5 @@ func (e *Export) Write() {
 }
 
 func getFileName(apiConfig config.Config) string {
-	return fmt.Sprintf("%d_%d_%s_%s_%s.csv", apiConfig.TimeTo, apiConfig.TimeTo, apiConfig.DataLogger, apiConfig.EnergyType, apiConfig.AggregationLevel)
+	return fmt.Sprintf("%d_%d_%s_%s_%s.csv", apiConfig.TimeFrom, apiConfig.TimeTo, apiConfig.DataLogger, apiConfig.EnergyType, apiConfig.AggregationLevel)
 }
