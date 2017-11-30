@@ -145,6 +145,8 @@ func (a *api) getRequestPath(path string) string {
 		return path
 	}
 
+	fields := []string{"timestamp", a.config.EnergyType}
+
 	payload := url.Values{}
 	payload.Set("aggregation_level", a.config.AggregationLevel)
 	payload.Add("filter[samples]", fmt.Sprintf("timestamp,%s", a.config.EnergyType))
@@ -152,5 +154,6 @@ func (a *api) getRequestPath(path string) string {
 	payload.Add("filter[to]", strconv.FormatInt(a.config.TimeTo, 10))
 	payload.Add("filter[data_logger]", a.config.DataLogger)
 	payload.Add("filter[sensor]", strings.Join(a.config.Sensors, ","))
+	payload.Add("fields[samples]", strings.Join(fields, ","))
 	return "/v2/samples/?" + payload.Encode()
 }
