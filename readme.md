@@ -45,16 +45,21 @@ example: `-sensor 12345678` or `-sensor 12345678 -sensor 23456789`
 #### -aggr
 
 example: `-aggr days_1`
+
 default `minutes_1`
+
 options `days_1`, `hours_1`, `minutes_15`, `minutes_1` or `none` (probably slow)
 
 #### -type
 
 example: `-aggr days_1`
+
 default `power`
+
 options `power` or `energy`
 
 #### -tz
 
 example: `-tz Europe/Berlin`
+
 default `UTC`
