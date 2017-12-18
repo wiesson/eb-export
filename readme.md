@@ -28,11 +28,11 @@ example: `-token <your-access-token>`
 
 #### -from\*
 
-example: `-from 2017-08-01`
+example: `-from 2017-08-01` or `-from 2017-08-08T00:00:00`
 
 #### -to\*
 
-example: `-to 2017-08-08`
+example: `-to 2017-08-08` or `- from 2017-08-08T00:15:00`
 
 #### -logger\*
 

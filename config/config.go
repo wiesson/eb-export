@@ -43,8 +43,8 @@ func New(accessToken, DataLogger, energyType, aggregationLevel, timezone, cmdFro
 		os.Exit(1)
 	}
 
-	lower, _ := time.ParseInLocation("2006-1-2", cmdFrom, loc)
-	upper, _ := time.ParseInLocation("2006-1-2", cmdTo, loc)
+	lower, _ := time.ParseInLocation("2006-1-2T15:04:05", completeDate(cmdFrom), loc)
+	upper, _ := time.ParseInLocation("2006-1-2T15:04:05", completeDate(cmdTo), loc)
 
 	log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, DataLogger, len(sensors))
 
@@ -87,4 +87,12 @@ func inSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func completeDate(date string) string {
+	length := len(date)
+	if length == 10 {
+		return date + "T00:00:00"
+	}
+	return date
 }
