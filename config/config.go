@@ -35,8 +35,22 @@ func New(accessToken, DataLogger, aggregationLevel, cmdFrom, cmdTo string, senso
 		energyTypes = []string{"power"}
 	}
 
-	lower, _ := time.Parse("2006-1-2T15:04:05", completeDate(cmdFrom))
-	upper, _ := time.Parse("2006-1-2T15:04:05", completeDate(cmdTo))
+	lower, err := time.Parse("2006-1-2T15:04:05", completeDate(cmdFrom))
+	if err != nil {
+		log.Fatal("could not parse from date")
+		os.Exit(1)
+	}
+
+	upper, err := time.Parse("2006-1-2T15:04:05", completeDate(cmdTo))
+	if err != nil {
+		log.Fatal("could not parse to date")
+		os.Exit(1)
+	}
+
+	if upper.Before(lower) {
+		log.Fatal("from date is before to date")
+		os.Exit(1)
+	}
 
 	if len(sensors) > 0 {
 		log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, DataLogger, len(sensors))
