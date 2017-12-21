@@ -56,4 +56,10 @@ example: `-type power` or `-type power -type energy`
 
 default `power`
 
-options `complex_voltage`, `voltage`, `complex_current`, `current`, `power`, `apparent_power`, `reactive_power`, `power_factor`, `energy`, `system_temperature`, `signed_power`, `signed_energy`, `aggregation_count`
+options `power`, `energy`, `current`, 
+
+
+### Todo
+
+Allow further energy types: 
+`apparent_power`, `reactive_power`, `power_factor`, `system_temperature`, `signed_power`, `signed_energy`, `aggregation_count`
