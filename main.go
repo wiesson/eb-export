@@ -26,7 +26,6 @@ func main() {
 	cmdFrom := flag.String("from", start.Format("2006-1-2"), "The lower date")
 	cmdTo := flag.String("to", to.Format("2006-1-2"), "The upper date")
 	logger := flag.String("logger", "", "Id of the data-logger")
-	tz := flag.String("tz", "UTC", "The identifier of the timezone, Europe/Berlin")
 	aggregationLevel := flag.String("aggr", aggregationLevels[1], "Aggregation level")
 	energyType := flag.String("type", strings.Join(energyTypes, ","), "power or energy")
 	exportFileType := flag.String("export", exportFileTypes[0], "export json or csv")
@@ -40,12 +39,10 @@ func main() {
 		*logger,
 		*energyType,
 		*aggregationLevel,
-		*tz,
 		*cmdFrom,
 		*cmdTo,
 		sensors,
 		aggregationLevels,
-		energyTypes,
 	)
 
 	apiHandler := api.New(apiConfig)

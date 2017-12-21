@@ -1,6 +1,6 @@
 ## API CSV Exporter
 
-Commandline application to export large chunks of CSV values from the API
+Commandline application to export large chunks of CSV values from the API.
 
 ### Install
 
@@ -58,8 +58,3 @@ default `power`
 
 options `power` or `energy`
 
-#### -tz
-
-example: `-tz Europe/Berlin`
-
-default `UTC`

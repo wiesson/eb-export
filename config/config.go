@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -16,12 +15,11 @@ type Config struct {
 	TimeFrom         time.Time
 	TimeTo           time.Time
 	AggregationLevel string
-	Tz               time.Location
 	EnergyType       string
 }
 
 // New returns a new instance of Config
-func New(accessToken, DataLogger, energyType, aggregationLevel, timezone, cmdFrom, cmdTo string, sensors, aggregationLevels, energyTypes []string) Config {
+func New(accessToken, DataLogger, energyType, aggregationLevel, cmdFrom, cmdTo string, sensors, aggregationLevels []string) Config {
 	if accessToken == "" {
 		log.Fatal("No access token given.")
 		os.Exit(1)
@@ -37,14 +35,8 @@ func New(accessToken, DataLogger, energyType, aggregationLevel, timezone, cmdFro
 		os.Exit(1)
 	} */
 
-	var loc, err = time.LoadLocation(timezone)
-	if err != nil {
-		fmt.Errorf("timezone could not be parsed: %v", err)
-		os.Exit(1)
-	}
-
-	lower, _ := time.ParseInLocation("2006-1-2T15:04:05", completeDate(cmdFrom), loc)
-	upper, _ := time.ParseInLocation("2006-1-2T15:04:05", completeDate(cmdTo), loc)
+	lower, _ := time.Parse("2006-1-2T15:04:05", completeDate(cmdFrom))
+	upper, _ := time.Parse("2006-1-2T15:04:05", completeDate(cmdTo))
 
 	if len(sensors) > 0 {
 		log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, DataLogger, len(sensors))
@@ -59,7 +51,6 @@ func New(accessToken, DataLogger, energyType, aggregationLevel, timezone, cmdFro
 		TimeFrom:         lower,
 		TimeTo:           upper,
 		AggregationLevel: aggregationLevel,
-		Tz:               *loc,
 		EnergyType:       energyType,
 	}
 }
