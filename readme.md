@@ -1,6 +1,6 @@
-## API JSON Exporter
+## API JSON/CSV Exporter
 
-Commandline application to export large chunks of JSON values from the API.
+Commandline application to export large chunks of JSON/CSV values from the API.
 
 ### Install
 

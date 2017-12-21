@@ -9,7 +9,7 @@ import (
 )
 
 var aggregationLevels = []string{"none", "minutes_1", "minutes_15", "hours_1", "days_1"}
-var exportFileTypes = []string{"json", "csv"}
+var exportFileFormats = []string{"json", "csv"}
 
 func Bod(t time.Time) time.Time {
 	year, month, day := t.Date()
@@ -25,7 +25,7 @@ func main() {
 	cmdTo := flag.String("to", to.Format("2006-1-2"), "The upper date")
 	logger := flag.String("logger", "", "Id of the data-logger")
 	aggregationLevel := flag.String("aggr", aggregationLevels[1], "Aggregation level")
-	exportFileType := flag.String("export", exportFileTypes[0], "export json or csv")
+	format := flag.String("format", exportFileFormats[0], "export json or csv")
 
 	var sensors config.Flags
 	flag.Var(&sensors, "sensor", "Id of the sensor")
@@ -49,6 +49,6 @@ func main() {
 	apiHandler := api.New(apiConfig)
 	samples := apiHandler.Fetch()
 
-	writer := export.New(samples, apiConfig, *exportFileType)
+	writer := export.New(samples, apiConfig, *format)
 	writer.Write()
 }

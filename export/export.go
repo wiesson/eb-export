@@ -8,24 +8,28 @@ import (
 	"os"
 	"encoding/json"
 	"strings"
+	"encoding/csv"
+	"time"
+	"strconv"
 )
 
 type Export struct {
-	sensors  []string
-	fileName string
-	fileType string
-	// data     api.Data
-	samples  api.Samples
+	energyTypes []string
+	sensors     []string
+	fileName    string
+	fileType    string
+	samples     api.Samples
 }
 
 func New(samples api.Samples, apiConfig config.Config, fileType string) Export {
 	name := getFileName(apiConfig, fileType)
 
 	return Export{
-		sensors:  apiConfig.Sensors,
-		fileName: name,
-		samples:  samples,
-		fileType: fileType,
+		energyTypes: apiConfig.EnergyTypes,
+		sensors:     apiConfig.Sensors,
+		fileName:    name,
+		samples:     samples,
+		fileType:    fileType,
 	}
 }
 
@@ -34,15 +38,15 @@ func (e *Export) Write() {
 		e.JSON()
 	}
 
-	/* if e.fileType == "csv" {
+	if e.fileType == "csv" {
 		e.CSV()
-	} */
+	}
 }
 
 func (e *Export) JSON() {
 	file, err := os.Create(e.fileName)
 	if err != nil {
-		log.Fatalln("error creating export.json", err)
+		log.Fatalln("error creating file", err)
 	}
 
 	defer file.Close()
@@ -51,27 +55,56 @@ func (e *Export) JSON() {
 	file.Write(samplesJson)
 	log.Printf("Created file: %s\n", e.fileName)
 }
-/*
+
 func (e *Export) CSV() {
 	file, err := os.Create(e.fileName)
 	if err != nil {
-		log.Fatalln("error creating result.csv", err)
+		log.Fatalln("error creating file", err)
 	}
 
 	defer file.Close()
 
 	w := csv.NewWriter(file)
 
+	// timestamp, sensorIdA power, sensorIdA energy, sensorIdB power, sensorIdB energy
+	var sensorIds []string
+	for _, sensor := range e.samples[0].Attributes.PowerResponseSamples {
+		sensorIds = append(sensorIds, sensor.SensorID)
+	}
+
 	csvHeader := []string{"timestamp"}
-	for _, sensorId := range e.sensors {
-		csvHeader = append(csvHeader, sensorId)
+	for _, energyType := range e.energyTypes {
+		for _, sensorId := range sensorIds {
+			csvHeader = append(csvHeader, fmt.Sprintf("%s %s", sensorId, energyType))
+		}
 	}
 
 	if err := w.Write(csvHeader); err != nil {
 		log.Fatalln("error writing header to csv:", err)
 	}
 
-	for _, column := range e.data {
+	for _, samples := range e.samples {
+		var csvRow []string
+		csvRow = append(csvRow, time.Unix(samples.Attributes.Timestamp, 0).UTC().Format("2006-01-02 15:04:05"))
+
+		for _, power := range samples.Attributes.PowerResponseSamples {
+			csvRow = append(csvRow, strconv.FormatFloat(power.Value, 'f', 8, 64))
+		}
+
+		for _, energy := range samples.Attributes.EnergyResponseSamples {
+			csvRow = append(csvRow, strconv.FormatFloat(energy.Value, 'f', 8, 64))
+		}
+
+		for _, current := range samples.Attributes.CurrentResponseSamples {
+			csvRow = append(csvRow, strconv.FormatFloat(current.Value, 'f', 8, 64))
+		}
+
+		if err := w.Write(csvRow); err != nil {
+			log.Fatalln("error writing row to csv:", err)
+		}
+	}
+
+	/* for _, column := range e.data {
 		var csvRow []string
 		csvRow = append(csvRow, column.DateTime.UTC().Format("2006-01-02 15:04:05"))
 		for _, sensorID := range e.sensors {
@@ -88,7 +121,7 @@ func (e *Export) CSV() {
 		if err := w.Write(csvRow); err != nil {
 			log.Fatalln("error writing row to csv:", err)
 		}
-	}
+	} */
 
 	// Write any buffered data to the underlying writer (standard output).
 	w.Flush()
@@ -97,7 +130,7 @@ func (e *Export) CSV() {
 		log.Fatal(err)
 	}
 	log.Printf("Created file: %s\n", e.fileName)
-} */
+}
 
 func getFileName(apiConfig config.Config, fileType string) string {
 	energyTypes := strings.Join(apiConfig.EnergyTypes, "-")

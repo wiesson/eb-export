@@ -41,6 +41,7 @@ type responseData struct {
 		Timestamp             int64            `json:"timestamp"`
 		PowerResponseSamples  []responseSample `json:"power"`
 		EnergyResponseSamples []responseSample `json:"energy"`
+		CurrentResponseSamples []responseSample `json:"current"`
 	} `json:"attributes"`
 }
 
