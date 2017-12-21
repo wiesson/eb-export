@@ -32,10 +32,10 @@ func New(accessToken, DataLogger, energyType, aggregationLevel, timezone, cmdFro
 		os.Exit(1)
 	}
 
-	if aggregationLevel != energyTypes[0] && inSlice(energyType, energyTypes) == false {
+	/* if energyType != energyTypes[0] && inSlice(energyType, energyTypes) == false {
 		log.Fatal("Wrong energyType given. Valid types are ", strings.Join(energyTypes, ", "))
 		os.Exit(1)
-	}
+	} */
 
 	var loc, err = time.LoadLocation(timezone)
 	if err != nil {
@@ -46,7 +46,11 @@ func New(accessToken, DataLogger, energyType, aggregationLevel, timezone, cmdFro
 	lower, _ := time.ParseInLocation("2006-1-2T15:04:05", completeDate(cmdFrom), loc)
 	upper, _ := time.ParseInLocation("2006-1-2T15:04:05", completeDate(cmdTo), loc)
 
-	log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, DataLogger, len(sensors))
+	if len(sensors) > 0 {
+		log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, DataLogger, len(sensors))
+	} else {
+		log.Printf("You have entered %s %s %s and all sensors\n", lower, upper, DataLogger)
+	}
 
 	return Config{
 		AccessToken:      accessToken,

@@ -6,10 +6,12 @@ import (
 	"github.com/wiesson/eb-export/config"
 	"github.com/wiesson/eb-export/export"
 	"time"
+	"strings"
 )
 
 var aggregationLevels = []string{"none", "minutes_1", "minutes_15", "hours_1", "days_1"}
 var energyTypes = []string{"power", "energy"}
+var exportFileTypes = []string{"json", "csv"}
 
 func Bod(t time.Time) time.Time {
 	year, month, day := t.Date()
@@ -26,10 +28,11 @@ func main() {
 	logger := flag.String("logger", "", "Id of the data-logger")
 	tz := flag.String("tz", "UTC", "The identifier of the timezone, Europe/Berlin")
 	aggregationLevel := flag.String("aggr", aggregationLevels[1], "Aggregation level")
-	energyType := flag.String("type", energyTypes[0], "EnergyType")
+	energyType := flag.String("type", strings.Join(energyTypes, ","), "power or energy")
+	exportFileType := flag.String("export", exportFileTypes[0], "export json or csv")
 
 	var sensors config.Flags
-	flag.Var(&sensors, "sensor", "Id of the data-logger")
+	flag.Var(&sensors, "sensor", "Id of the sensor")
 	flag.Parse()
 
 	apiConfig := config.New(
@@ -46,8 +49,8 @@ func main() {
 	)
 
 	apiHandler := api.New(apiConfig)
-	data := apiHandler.Fetch()
+	samples := apiHandler.Fetch()
 
-	writer := export.New(data, apiConfig)
+	writer := export.New(samples, apiConfig, *exportFileType)
 	writer.Write()
 }

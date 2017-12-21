@@ -18,7 +18,8 @@ const baseUrl = "https://api.internetofefficiency.com"
 
 type api struct {
 	config config.Config
-	Data   Data
+	// Data   Data
+	Samples
 }
 
 // New returns an instance of api
@@ -54,9 +55,15 @@ type Sample struct {
 	Readings  map[string]*float64
 }
 
-type Data []Sample
+type Samples []responseData
 
-func (d *Data) addReading(value responseData, energyType string) {
+func (s *Samples) Add(data responseData) {
+	*s = append(*s, data)
+}
+
+// type Data []Sample
+
+/* func (d *Data) addReading(value responseData, energyType string) {
 	DateTime := time.Unix(value.Attributes.Timestamp, 0)
 
 	row := &Sample{
@@ -77,9 +84,9 @@ func (d *Data) addReading(value responseData, energyType string) {
 	}
 
 	*d = append(*d, *row)
-}
+} */
 
-func (a *api) Fetch() []Sample {
+func (a *api) Fetch() (Samples) {
 	nextUrl := a.getRequestPath("")
 	hasNext := true
 
@@ -96,8 +103,10 @@ func (a *api) Fetch() []Sample {
 			log.Printf("Fetching from %s\n", logMessage.Get("page[offset]"))
 		}
 
+
 		for _, value := range res.Data {
-			a.Data.addReading(value, a.config.EnergyType)
+			a.Samples.Add(value)
+			// a.Data.addReading(value, a.config.EnergyType)
 		}
 
 		nextUrl = res.Links.NextURL
@@ -107,7 +116,7 @@ func (a *api) Fetch() []Sample {
 		}
 	}
 
-	return a.Data
+	return a.Samples
 }
 
 func (a *api) get(url string) (response, error) {
@@ -149,7 +158,6 @@ func (a *api) getRequestPath(path string) string {
 
 	payload := url.Values{}
 	payload.Set("aggregation_level", a.config.AggregationLevel)
-	payload.Add("filter[samples]", fmt.Sprintf("timestamp,%s", a.config.EnergyType))
 	payload.Add("filter[from]", strconv.FormatInt(a.config.TimeFrom, 10))
 	payload.Add("filter[to]", strconv.FormatInt(a.config.TimeTo, 10))
 	payload.Add("filter[data_logger]", a.config.DataLogger)

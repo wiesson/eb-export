@@ -1,32 +1,57 @@
 package export
 
 import (
-	"encoding/csv"
 	"fmt"
 	"github.com/wiesson/eb-export/api"
 	"github.com/wiesson/eb-export/config"
 	"log"
 	"os"
-	"strconv"
+	"encoding/json"
 )
 
 type Export struct {
 	sensors  []string
 	fileName string
-	data     api.Data
+	fileType string
+	// data     api.Data
+	samples  api.Samples
 }
 
-func New(data api.Data, apiConfig config.Config) Export {
-	name := getFileName(apiConfig)
+func New(samples api.Samples, apiConfig config.Config, fileType string) Export {
+	name := getFileName(apiConfig, fileType)
 
 	return Export{
 		sensors:  apiConfig.Sensors,
 		fileName: name,
-		data:     data,
+		samples:  samples,
+		fileType: fileType,
 	}
 }
 
 func (e *Export) Write() {
+	if e.fileType == "json" {
+		e.JSON()
+	}
+
+	/* if e.fileType == "csv" {
+		e.CSV()
+	} */
+}
+
+func (e *Export) JSON() {
+	file, err := os.Create(e.fileName)
+	if err != nil {
+		log.Fatalln("error creating export.json", err)
+	}
+
+	defer file.Close()
+
+	samplesJson, _ := json.Marshal(e.samples)
+	file.Write(samplesJson)
+	log.Printf("Created file: %s\n", e.fileName)
+}
+/*
+func (e *Export) CSV() {
 	file, err := os.Create(e.fileName)
 	if err != nil {
 		log.Fatalln("error creating result.csv", err)
@@ -71,8 +96,8 @@ func (e *Export) Write() {
 		log.Fatal(err)
 	}
 	log.Printf("Created file: %s\n", e.fileName)
-}
+} */
 
-func getFileName(apiConfig config.Config) string {
-	return fmt.Sprintf("%d_%d_%s_%s_%s.csv", apiConfig.TimeFrom, apiConfig.TimeTo, apiConfig.DataLogger, apiConfig.EnergyType, apiConfig.AggregationLevel)
+func getFileName(apiConfig config.Config, fileType string) string {
+	return fmt.Sprintf("%d_%d_%s_%s_%s.%s", apiConfig.TimeFrom, apiConfig.TimeTo, apiConfig.DataLogger, apiConfig.EnergyType, apiConfig.AggregationLevel, fileType)
 }
