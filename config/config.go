@@ -11,15 +11,15 @@ import (
 type Config struct {
 	AccessToken      string
 	DataLogger       string
+	EnergyTypes      []string
 	Sensors          []string
 	TimeFrom         time.Time
 	TimeTo           time.Time
 	AggregationLevel string
-	EnergyType       string
 }
 
 // New returns a new instance of Config
-func New(accessToken, DataLogger, energyType, aggregationLevel, cmdFrom, cmdTo string, sensors, aggregationLevels []string) Config {
+func New(accessToken, DataLogger, aggregationLevel, cmdFrom, cmdTo string, sensors, energyTypes, aggregationLevels []string) Config {
 	if accessToken == "" {
 		log.Fatal("No access token given.")
 		os.Exit(1)
@@ -30,10 +30,10 @@ func New(accessToken, DataLogger, energyType, aggregationLevel, cmdFrom, cmdTo s
 		os.Exit(1)
 	}
 
-	/* if energyType != energyTypes[0] && inSlice(energyType, energyTypes) == false {
-		log.Fatal("Wrong energyType given. Valid types are ", strings.Join(energyTypes, ", "))
-		os.Exit(1)
-	} */
+	// default value for energyTypes
+	if len(energyTypes) == 0 {
+		energyTypes = []string{"power"}
+	}
 
 	lower, _ := time.Parse("2006-1-2T15:04:05", completeDate(cmdFrom))
 	upper, _ := time.Parse("2006-1-2T15:04:05", completeDate(cmdTo))
@@ -47,11 +47,11 @@ func New(accessToken, DataLogger, energyType, aggregationLevel, cmdFrom, cmdTo s
 	return Config{
 		AccessToken:      accessToken,
 		DataLogger:       DataLogger,
+		EnergyTypes:      energyTypes,
 		Sensors:          sensors,
 		TimeFrom:         lower,
 		TimeTo:           upper,
 		AggregationLevel: aggregationLevel,
-		EnergyType:       energyType,
 	}
 }
 

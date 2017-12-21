@@ -163,7 +163,7 @@ func (a *api) getRequestPath(path string, start, end time.Time) string {
 		return path
 	}
 
-	fields := []string{"timestamp", a.config.EnergyType}
+	fields := []string{"timestamp", strings.Join(a.config.EnergyTypes, ",")}
 	payload := url.Values{}
 	payload.Set("aggregation_level", a.config.AggregationLevel)
 	payload.Add("filter[from]", strconv.FormatInt(start.Unix(), 10))

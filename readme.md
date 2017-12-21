@@ -50,11 +50,10 @@ default `minutes_1`
 
 options `days_1`, `hours_1`, `minutes_15`, `minutes_1` or `none` (probably slow)
 
-#### -type
+#### -type (array)\*
 
-example: `-aggr days_1`
+example: `-type power` or `-type power -type energy`
 
 default `power`
 
-options `power` or `energy`
-
+options `complex_voltage`, `voltage`, `complex_current`, `current`, `power`, `apparent_power`, `reactive_power`, `power_factor`, `energy`, `system_temperature`, `signed_power`, `signed_energy`, `aggregation_count`

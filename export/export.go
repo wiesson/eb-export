@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"encoding/json"
+	"strings"
 )
 
 type Export struct {
@@ -99,5 +100,6 @@ func (e *Export) CSV() {
 } */
 
 func getFileName(apiConfig config.Config, fileType string) string {
-	return fmt.Sprintf("%d_%d_%s_%s_%s.%s", apiConfig.TimeFrom.Unix(), apiConfig.TimeTo.Unix(), apiConfig.DataLogger, apiConfig.EnergyType, apiConfig.AggregationLevel, fileType)
+	energyTypes := strings.Join(apiConfig.EnergyTypes, "-")
+	return fmt.Sprintf("%d_%d_%s_%s_%s.%s", apiConfig.TimeFrom.Unix(), apiConfig.TimeTo.Unix(), apiConfig.DataLogger, energyTypes, apiConfig.AggregationLevel, fileType)
 }
