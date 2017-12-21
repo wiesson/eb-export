@@ -13,8 +13,8 @@ type Config struct {
 	AccessToken      string
 	DataLogger       string
 	Sensors          []string
-	TimeFrom         int64
-	TimeTo           int64
+	TimeFrom         time.Time
+	TimeTo           time.Time
 	AggregationLevel string
 	Tz               time.Location
 	EnergyType       string
@@ -56,8 +56,8 @@ func New(accessToken, DataLogger, energyType, aggregationLevel, timezone, cmdFro
 		AccessToken:      accessToken,
 		DataLogger:       DataLogger,
 		Sensors:          sensors,
-		TimeFrom:         lower.Unix(),
-		TimeTo:           upper.Unix(),
+		TimeFrom:         lower,
+		TimeTo:           upper,
 		AggregationLevel: aggregationLevel,
 		Tz:               *loc,
 		EnergyType:       energyType,

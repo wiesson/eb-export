@@ -9,9 +9,9 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
+	"strconv"
 )
 
 const baseUrl = "https://api.internetofefficiency.com"
@@ -87,34 +87,43 @@ func (s *Samples) Add(data responseData) {
 } */
 
 func (a *api) Fetch() (Samples) {
-	nextUrl := a.getRequestPath("")
-	hasNext := true
+	// split range into single days
+	for d := a.config.TimeFrom; d.Before(a.config.TimeTo); d = d.AddDate(0, 0, 1) {
+		start := d
+		end := start.AddDate(0, 0, 1)
 
-	for hasNext {
-		res, err := a.get(nextUrl)
-		if err != nil {
-			log.Fatal(err)
-		}
+		log.Printf("Fetching from %s to %s\n", start, end)
 
-		logMessage, err := url.ParseQuery(nextUrl)
-		offset := logMessage.Get("page[offset]")
+		nextUrl := a.getRequestPath("", start, end)
+		hasNext := true
 
-		if offset != "" {
-			log.Printf("Fetching from %s\n", logMessage.Get("page[offset]"))
-		}
+		for hasNext {
+			res, err := a.get(nextUrl)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			logMessage, err := url.ParseQuery(nextUrl)
+			offset := logMessage.Get("page[offset]")
+
+			if offset != "" {
+				log.Printf("Fetching from offset %s\n", logMessage.Get("page[offset]"))
+			}
 
 
-		for _, value := range res.Data {
-			a.Samples.Add(value)
-			// a.Data.addReading(value, a.config.EnergyType)
-		}
+			for _, value := range res.Data {
+				a.Samples.Add(value)
+				// a.Data.addReading(value, a.config.EnergyType)
+			}
 
-		nextUrl = res.Links.NextURL
-		if nextUrl == "" {
-			hasNext = false
-			break
+			nextUrl = res.Links.NextURL
+			if nextUrl == "" {
+				hasNext = false
+				break
+			}
 		}
 	}
+
 
 	return a.Samples
 }
@@ -149,17 +158,16 @@ func (a *api) get(url string) (response, error) {
 	return *s, nil
 }
 
-func (a *api) getRequestPath(path string) string {
+func (a *api) getRequestPath(path string, start, end time.Time) string {
 	if path != "" {
 		return path
 	}
 
 	fields := []string{"timestamp", a.config.EnergyType}
-
 	payload := url.Values{}
 	payload.Set("aggregation_level", a.config.AggregationLevel)
-	payload.Add("filter[from]", strconv.FormatInt(a.config.TimeFrom, 10))
-	payload.Add("filter[to]", strconv.FormatInt(a.config.TimeTo, 10))
+	payload.Add("filter[from]", strconv.FormatInt(start.Unix(), 10))
+	payload.Add("filter[to]", strconv.FormatInt(end.Unix(), 10))
 	payload.Add("filter[data_logger]", a.config.DataLogger)
 	payload.Add("filter[sensor]", strings.Join(a.config.Sensors, ","))
 	payload.Add("fields[samples]", strings.Join(fields, ","))

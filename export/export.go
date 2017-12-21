@@ -99,5 +99,5 @@ func (e *Export) CSV() {
 } */
 
 func getFileName(apiConfig config.Config, fileType string) string {
-	return fmt.Sprintf("%d_%d_%s_%s_%s.%s", apiConfig.TimeFrom, apiConfig.TimeTo, apiConfig.DataLogger, apiConfig.EnergyType, apiConfig.AggregationLevel, fileType)
+	return fmt.Sprintf("%d_%d_%s_%s_%s.%s", apiConfig.TimeFrom.Unix(), apiConfig.TimeTo.Unix(), apiConfig.DataLogger, apiConfig.EnergyType, apiConfig.AggregationLevel, fileType)
 }
