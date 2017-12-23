@@ -9,27 +9,28 @@ import (
 	"encoding/json"
 	"strings"
 	"encoding/csv"
-	"time"
 	"strconv"
 )
 
 type Export struct {
-	energyTypes []string
-	sensors     []string
-	fileName    string
-	fileType    string
-	samples     api.Samples
+	energyTypes     []string
+	selectedSensors []api.Sensor
+	samples         api.Samples
+	data            api.Data
+	fileName        string
+	fileType        string
 }
 
-func New(samples api.Samples, apiConfig config.Config, fileType string) Export {
+func New(samples api.Samples, selectedSensors []api.Sensor, data api.Data, apiConfig config.Config, fileType string) Export {
 	name := getFileName(apiConfig, fileType)
 
 	return Export{
-		energyTypes: apiConfig.EnergyTypes,
-		sensors:     apiConfig.Sensors,
-		fileName:    name,
-		samples:     samples,
-		fileType:    fileType,
+		energyTypes:     apiConfig.EnergyTypes,
+		samples:         samples,
+		data:            data,
+		selectedSensors: selectedSensors,
+		fileName:        name,
+		fileType:        fileType,
 	}
 }
 
@@ -63,19 +64,13 @@ func (e *Export) CSV() {
 	}
 
 	defer file.Close()
-
 	w := csv.NewWriter(file)
 
 	// timestamp, sensorIdA power, sensorIdA energy, sensorIdB power, sensorIdB energy
-	var sensorIds []string
-	for _, sensor := range e.samples[0].Attributes.PowerResponseSamples {
-		sensorIds = append(sensorIds, sensor.SensorID)
-	}
-
 	csvHeader := []string{"timestamp"}
-	for _, energyType := range e.energyTypes {
-		for _, sensorId := range sensorIds {
-			csvHeader = append(csvHeader, fmt.Sprintf("%s %s", sensorId, energyType))
+	for _, sensor := range e.selectedSensors {
+		for _, energyType := range e.energyTypes {
+			csvHeader = append(csvHeader, fmt.Sprintf("%s %s", sensor.Id, energyType))
 		}
 	}
 
@@ -83,45 +78,24 @@ func (e *Export) CSV() {
 		log.Fatalln("error writing header to csv:", err)
 	}
 
-	for _, samples := range e.samples {
+	for _, column := range e.data {
 		var csvRow []string
-		csvRow = append(csvRow, time.Unix(samples.Attributes.Timestamp, 0).UTC().Format("2006-01-02 15:04:05"))
-
-		for _, power := range samples.Attributes.PowerResponseSamples {
-			csvRow = append(csvRow, strconv.FormatFloat(power.Value, 'f', 8, 64))
-		}
-
-		for _, energy := range samples.Attributes.EnergyResponseSamples {
-			csvRow = append(csvRow, strconv.FormatFloat(energy.Value, 'f', 8, 64))
-		}
-
-		for _, current := range samples.Attributes.CurrentResponseSamples {
-			csvRow = append(csvRow, strconv.FormatFloat(current.Value, 'f', 8, 64))
+		csvRow = append(csvRow, column.DateTime.UTC().Format("2006-01-02 15:04:05"))
+		for _, sensor := range e.selectedSensors {
+			for _, energyType := range e.energyTypes {
+				v := column.Readings[sensor.Id][energyType]
+				if v == nil {
+					csvRow = append(csvRow, "")
+				} else {
+					csvRow = append(csvRow, strconv.FormatFloat(*v, 'f', 8, 64))
+				}
+			}
 		}
 
 		if err := w.Write(csvRow); err != nil {
 			log.Fatalln("error writing row to csv:", err)
 		}
 	}
-
-	/* for _, column := range e.data {
-		var csvRow []string
-		csvRow = append(csvRow, column.DateTime.UTC().Format("2006-01-02 15:04:05"))
-		for _, sensorID := range e.sensors {
-			v := column.Readings[sensorID]
-
-			if v == nil {
-				csvRow = append(csvRow, "")
-			} else {
-				csvRow = append(csvRow, strconv.FormatFloat(*v, 'f', 8, 64))
-			}
-
-		}
-
-		if err := w.Write(csvRow); err != nil {
-			log.Fatalln("error writing row to csv:", err)
-		}
-	} */
 
 	// Write any buffered data to the underlying writer (standard output).
 	w.Flush()

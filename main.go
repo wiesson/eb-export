@@ -27,8 +27,8 @@ func main() {
 	aggregationLevel := flag.String("aggr", aggregationLevels[1], "Aggregation level")
 	format := flag.String("format", exportFileFormats[0], "export json or csv")
 
-	var sensors config.Flags
-	flag.Var(&sensors, "sensor", "Id of the sensor")
+	var inputSensors config.Flags
+	flag.Var(&inputSensors , "sensor", "Id of the sensor")
 
 	var energyTypes config.Flags
 	flag.Var(&energyTypes, "type", "energy type")
@@ -41,14 +41,16 @@ func main() {
 		*aggregationLevel,
 		*cmdFrom,
 		*cmdTo,
-		sensors,
+		*format,
+		inputSensors,
 		energyTypes,
 		aggregationLevels,
 	)
 
 	apiHandler := api.New(apiConfig)
-	samples := apiHandler.Fetch()
+	apiHandler.FetchLogger()
+	sensors, samples, data := apiHandler.FetchSamples()
 
-	writer := export.New(samples, apiConfig, *format)
+	writer := export.New(samples, sensors, data, apiConfig, *format)
 	writer.Write()
 }

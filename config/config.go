@@ -12,14 +12,15 @@ type Config struct {
 	AccessToken      string
 	DataLogger       string
 	EnergyTypes      []string
-	Sensors          []string
+	InputSensors     []string
 	TimeFrom         time.Time
 	TimeTo           time.Time
 	AggregationLevel string
+	Format           string
 }
 
 // New returns a new instance of Config
-func New(accessToken, DataLogger, aggregationLevel, cmdFrom, cmdTo string, sensors, energyTypes, aggregationLevels []string) Config {
+func New(accessToken, DataLogger, aggregationLevel, cmdFrom, cmdTo, format string, inputSensors, energyTypes, aggregationLevels []string) Config {
 	if accessToken == "" {
 		log.Fatal("No access token given.")
 		os.Exit(1)
@@ -52,17 +53,18 @@ func New(accessToken, DataLogger, aggregationLevel, cmdFrom, cmdTo string, senso
 		os.Exit(1)
 	}
 
-	if len(sensors) > 0 {
-		log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, DataLogger, len(sensors))
+	if len(inputSensors) > 0 {
+		log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, DataLogger, len(inputSensors))
 	} else {
 		log.Printf("You have entered %s %s %s and all sensors\n", lower, upper, DataLogger)
 	}
 
 	return Config{
 		AccessToken:      accessToken,
+		Format:           format,
 		DataLogger:       DataLogger,
 		EnergyTypes:      energyTypes,
-		Sensors:          sensors,
+		InputSensors:     inputSensors,
 		TimeFrom:         lower,
 		TimeTo:           upper,
 		AggregationLevel: aggregationLevel,

@@ -12,14 +12,17 @@ import (
 	"strings"
 	"time"
 	"strconv"
+	"io"
 )
 
 const baseUrl = "https://api.internetofefficiency.com"
 
 type api struct {
-	config config.Config
-	// Data   Data
+	config  config.Config
+	Sensors []Sensor
+	Logger
 	Samples
+	Data
 }
 
 // New returns an instance of api
@@ -27,67 +30,150 @@ func New(config config.Config) api {
 	return api{config: config}
 }
 
-type response struct {
-	Data  []responseData `json:"data"`
+type Logger struct {
+	Id              string
+	Description     string
+	Building        string
+	MacAddress      string
+	SampleFrequency int64
+	NumPhases       int64
+	Mdp             bool
+	CreatedAt       int64
+}
+
+type loggerResponse struct {
+	Data responseLoggerData `json:"data"`
+}
+
+type responseLoggerData struct {
+	Type string `json:"type"`
+	Id   string `json:"id"`
+	Attributes struct {
+		Description     string   `json:"description"`
+		Building        string   `json:"building"`
+		MacAddress      string   `json:"mac_address"`
+		SampleFrequency int64    `json:"sample_frequency"`
+		NumPhases       int64    `json:"num_phases"`
+		Mdp             bool     `json:"mdp"`
+		CreatedAt       int64    `json:"created_at"`
+		Sensors         []Sensor `json:"sensors"`
+	}
+}
+
+type Sensor struct {
+	Id          string `json:"sensor_id"`
+	Type        string `json:"type"`
+	Phase       int64  `json:"phase"`
+	Description string `json:"description"`
+}
+
+type samplesResponse struct {
+	Data []responseSampleData `json:"data"`
 	Links struct {
 		NextURL string `json:"next"`
 	} `json:"links"`
 }
 
-type responseData struct {
-	Type       string `json:"type"`
-	Id         string `json:"id"`
+type responseSampleData struct {
+	Type string `json:"type"`
+	Id   string `json:"id"`
 	Attributes struct {
-		Timestamp             int64            `json:"timestamp"`
-		PowerResponseSamples  []responseSample `json:"power"`
-		EnergyResponseSamples []responseSample `json:"energy"`
+		Timestamp              int64            `json:"timestamp"`
+		PowerResponseSamples   []responseSample `json:"power"`
+		EnergyResponseSamples  []responseSample `json:"energy"`
 		CurrentResponseSamples []responseSample `json:"current"`
 	} `json:"attributes"`
 }
 
 type responseSample struct {
-	SensorID string  `json:"sensor_id"`
+	Id string  `json:"sensor_id"`
 	Value    float64 `json:"value"`
 }
 
 type Sample struct {
 	Timestamp int64
 	DateTime  time.Time
-	Readings  map[string]*float64
+	Readings  map[string]map[string]*float64
 }
 
-type Samples []responseData
+type Samples []responseSampleData
 
-func (s *Samples) Add(data responseData) {
+func (s *Samples) Add(data responseSampleData) {
 	*s = append(*s, data)
 }
 
-// type Data []Sample
+type Data []Sample
 
-/* func (d *Data) addReading(value responseData, energyType string) {
+func (d *Data) addReading(value responseSampleData, sensors []Sensor, energyTypes []string) {
 	DateTime := time.Unix(value.Attributes.Timestamp, 0)
+
+	var readings = map[string]map[string]*float64{}
+	for _, sensor := range sensors {
+		readings[sensor.Id] = make(map[string]*float64)
+	}
 
 	row := &Sample{
 		Timestamp: value.Attributes.Timestamp,
 		DateTime:  DateTime,
-		Readings:  make(map[string]*float64),
+		Readings:  readings,
 	}
 
-	switch energyType {
-	case "energy":
-		for _, sample := range value.Attributes.EnergyResponseSamples {
-			row.Readings[sample.SensorID] = &sample.Value
+	for _, energyType := range energyTypes {
+		switch energyType {
+		case "power":
+			for _, sample := range value.Attributes.PowerResponseSamples {
+				var v float64
+				v = sample.Value
+				row.Readings[sample.Id][energyType] = &v
 		}
-	default:
-		for _, sample := range value.Attributes.PowerResponseSamples {
-			row.Readings[sample.SensorID] = &sample.Value
+
+		case "energy":
+			for _, sample := range value.Attributes.EnergyResponseSamples {
+				var v float64
+				v = sample.Value
+				row.Readings[sample.Id][energyType] = &v
+		}
+
+		case "current":
+			for _, sample := range value.Attributes.CurrentResponseSamples {
+				var v float64
+				v = sample.Value
+				row.Readings[sample.Id][energyType] = &v
+			}
 		}
 	}
 
 	*d = append(*d, *row)
-} */
+}
 
-func (a *api) Fetch() (Samples) {
+func (a *api) FetchLogger() []Sensor {
+	loggerResponse, _ := a.getLogger()
+	a.Logger.Id = loggerResponse.Data.Id
+	a.Logger.Description = loggerResponse.Data.Attributes.Description
+	a.Logger.Building = loggerResponse.Data.Attributes.Building
+	a.Logger.MacAddress = loggerResponse.Data.Attributes.MacAddress
+	a.Logger.SampleFrequency = loggerResponse.Data.Attributes.SampleFrequency
+	a.Logger.NumPhases = loggerResponse.Data.Attributes.NumPhases
+	a.Logger.Mdp = loggerResponse.Data.Attributes.Mdp
+	a.Logger.CreatedAt = loggerResponse.Data.Attributes.CreatedAt
+	a.Sensors = loggerResponse.Data.Attributes.Sensors
+	return a.Sensors
+}
+
+func (a *api) FetchSamples() ([]Sensor, Samples, Data) {
+	var selectedSensors []Sensor
+	if len(a.config.InputSensors) > 0 {
+		for _, sensor := range a.Sensors {
+			for _, selectedSensor := range a.config.InputSensors {
+				if sensor.Id == selectedSensor {
+					selectedSensors = append(selectedSensors, sensor)
+				}
+			}
+		}
+	} else {
+		selectedSensors = a.Sensors
+	}
+
 	// split range into single days
 	for d := a.config.TimeFrom; d.Before(a.config.TimeTo); d = d.AddDate(0, 0, 1) {
 		start := d
@@ -95,11 +181,11 @@ func (a *api) Fetch() (Samples) {
 
 		log.Printf("Fetching from %s to %s\n", start, end)
 
-		nextUrl := a.getRequestPath("", start, end)
+		nextUrl := a.getSamplesParameters("", start, end)
 		hasNext := true
 
 		for hasNext {
-			res, err := a.get(nextUrl)
+			res, err := a.getSamples(nextUrl)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -111,10 +197,12 @@ func (a *api) Fetch() (Samples) {
 				log.Printf("Fetching from offset %s\n", logMessage.Get("page[offset]"))
 			}
 
-
 			for _, value := range res.Data {
-				a.Samples.Add(value)
-				// a.Data.addReading(value, a.config.EnergyType)
+				if a.config.Format == "json" {
+					a.Samples.Add(value)
+				} else {
+					a.Data.addReading(value, selectedSensors, a.config.EnergyTypes)
+				}
 			}
 
 			nextUrl = res.Links.NextURL
@@ -125,52 +213,104 @@ func (a *api) Fetch() (Samples) {
 		}
 	}
 
-
-	return a.Samples
+	return selectedSensors, a.Samples, a.Data
 }
 
-func (a *api) get(url string) (response, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", baseUrl+url, nil)
-	if err != nil {
-		return response{}, fmt.Errorf("unable to create new request: %v", err)
-	}
-	req.Header.Set("Accept-Encoding", "gzip")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.config.AccessToken))
-
+func (a *api) getLogger() (loggerResponse, error) {
+	var client http.Client
+	req, _ := a.NewGetRequest("/v2/data_loggers/" + a.config.DataLogger)
 	res, err := client.Do(req)
 	if err != nil {
-		return response{}, fmt.Errorf("unable to do API request: %v", err)
+		return loggerResponse{}, err
 	}
 	defer res.Body.Close()
 
-	s := &response{}
+	// log.Printf("%v\n", res)
 
-	body, err := gzip.NewReader(res.Body)
-	if err != nil {
-		return response{}, fmt.Errorf("unable to decode gzipped resonse: %v", err)
+	var body io.ReadCloser
+	switch res.Header.Get("Content-Encoding") {
+	case "gzip":
+		body, err = gzip.NewReader(res.Body)
+		if err != nil {
+			return loggerResponse{}, fmt.Errorf("unable to decode gzipped response: %v", err)
+		}
+		defer body.Close()
+	default:
+		body = res.Body
 	}
 
-	err = json.NewDecoder(body).Decode(s)
+	payload := &loggerResponse{}
+	err = json.NewDecoder(body).Decode(payload)
 	if err != nil {
-		return response{}, fmt.Errorf("unable to parse JSON: %v", err)
+		return loggerResponse{}, fmt.Errorf("unable to parse JSON: %v", err)
 	}
 
-	return *s, nil
+	body = nil
+
+	return *payload, nil
 }
 
-func (a *api) getRequestPath(path string, start, end time.Time) string {
+func (a *api) getSamples(requestUrl string) (samplesResponse, error) {
+	var client http.Client
+	req, _ := a.NewGetRequest(requestUrl)
+	res, err := client.Do(req)
+	if err != nil {
+		return samplesResponse{}, err
+	}
+	defer res.Body.Close()
+
+	// log.Printf("%v\n", res)
+
+	var body io.ReadCloser
+	switch res.Header.Get("Content-Encoding") {
+	case "gzip":
+		body, err = gzip.NewReader(res.Body)
+		if err != nil {
+			return samplesResponse{}, fmt.Errorf("unable to decode gzipped response: %v", err)
+		}
+		defer body.Close()
+	default:
+		body = res.Body
+	}
+
+	payload := &samplesResponse{}
+	err = json.NewDecoder(body).Decode(payload)
+	if err != nil {
+		return samplesResponse{}, fmt.Errorf("unable to parse http response: %v", err)
+	}
+
+	return *payload, nil
+}
+
+func (a *api) getSamplesParameters(path string, start, end time.Time) string {
 	if path != "" {
 		return path
 	}
 
 	fields := []string{"timestamp", strings.Join(a.config.EnergyTypes, ",")}
+
 	payload := url.Values{}
 	payload.Set("aggregation_level", a.config.AggregationLevel)
 	payload.Add("filter[from]", strconv.FormatInt(start.Unix(), 10))
 	payload.Add("filter[to]", strconv.FormatInt(end.Unix(), 10))
 	payload.Add("filter[data_logger]", a.config.DataLogger)
-	payload.Add("filter[sensor]", strings.Join(a.config.Sensors, ","))
 	payload.Add("fields[samples]", strings.Join(fields, ","))
+
+	if len(a.config.InputSensors) > 0 {
+		payload.Add("filter[sensor]", strings.Join(a.config.InputSensors, ","))
+	}
+
 	return "/v2/samples/?" + payload.Encode()
+}
+
+func (a *api) NewGetRequest(requestUrl string) (*http.Request, error) {
+	req, err := http.NewRequest("GET", baseUrl+requestUrl, nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create new request: %v", err)
+	}
+
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.config.AccessToken))
+
+	return req, nil
 }
