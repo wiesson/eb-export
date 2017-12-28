@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+var aggregationLevels = []string{"none", "minutes_1", "minutes_15", "hours_1", "days_1"}
+var exportFileFormats = []string{"json", "csv"}
+var defaultEnergyType = []string{"power"}
+
 // Config contains the configuration
 type Config struct {
 	AccessToken      string
@@ -20,54 +24,56 @@ type Config struct {
 }
 
 // New returns a new instance of Config
-func New(accessToken, DataLogger, aggregationLevel, cmdFrom, cmdTo, format string, inputSensors, energyTypes, aggregationLevels []string) Config {
-	if accessToken == "" {
+func New(cmdToken, cmdDataLogger, cmdAggregation, cmdFrom, cmdTo, cmdFormat string, cmdInputSensors, cmdEnergyTypes []string) Config {
+	if cmdToken == "" {
 		log.Fatal("No access token given.")
 		os.Exit(1)
 	}
 
-	if aggregationLevel != aggregationLevels[2] && inSlice(aggregationLevel, aggregationLevels) == false {
-		log.Fatal("Wrong aggregation level given. Valid levels are ", strings.Join(aggregationLevels, ", "))
-		os.Exit(1)
+	if inSlice(cmdAggregation, aggregationLevels) == false {
+		cmdAggregation = aggregationLevels[1]
 	}
 
-	// default value for energyTypes
-	if len(energyTypes) == 0 {
-		energyTypes = []string{"power"}
+	if cmdFormat == "" {
+		cmdFormat = exportFileFormats[0]
 	}
 
-	lower, err := time.Parse("2006-1-2T15:04:05", completeDate(cmdFrom))
+	if len(cmdEnergyTypes) == 0 {
+		cmdEnergyTypes = defaultEnergyType
+	}
+
+	cmdTimeFrom, err := time.Parse("2006-1-2T15:04:05", completeDate(cmdFrom))
 	if err != nil {
 		log.Fatal("could not parse from date")
 		os.Exit(1)
 	}
 
-	upper, err := time.Parse("2006-1-2T15:04:05", completeDate(cmdTo))
+	cmdTimeTo, err := time.Parse("2006-1-2T15:04:05", completeDate(cmdTo))
 	if err != nil {
 		log.Fatal("could not parse to date")
 		os.Exit(1)
 	}
 
-	if upper.Before(lower) {
+	if cmdTimeTo.Before(cmdTimeFrom) {
 		log.Fatal("from date is before to date")
 		os.Exit(1)
 	}
 
-	if len(inputSensors) > 0 {
-		log.Printf("You have entered %s %s %s and %d sensors\n", lower, upper, DataLogger, len(inputSensors))
+	if len(cmdInputSensors) > 0 {
+		log.Printf("You have entered %s %s %s and %d sensors\n", cmdTimeFrom, cmdTimeTo, cmdDataLogger, len(cmdInputSensors))
 	} else {
-		log.Printf("You have entered %s %s %s and all sensors\n", lower, upper, DataLogger)
+		log.Printf("You have entered %s %s %s and all sensors\n", cmdTimeFrom, cmdTimeTo, cmdDataLogger)
 	}
 
 	return Config{
-		AccessToken:      accessToken,
-		Format:           format,
-		DataLogger:       DataLogger,
-		EnergyTypes:      energyTypes,
-		InputSensors:     inputSensors,
-		TimeFrom:         lower,
-		TimeTo:           upper,
-		AggregationLevel: aggregationLevel,
+		AccessToken:      cmdToken,
+		Format:           cmdFormat,
+		DataLogger:       cmdDataLogger,
+		EnergyTypes:      cmdEnergyTypes,
+		InputSensors:     cmdInputSensors,
+		TimeFrom:         cmdTimeFrom,
+		TimeTo:           cmdTimeTo,
+		AggregationLevel: cmdAggregation,
 	}
 }
 
