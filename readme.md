@@ -1,11 +1,17 @@
 ## API JSON/CSV Exporter
 
-Commandline application to export large chunks of JSON/CSV values from the API.
+Command line application to export large chunks of JSON/CSV values from the API.
 
 ### Install
 
+Using go get:
 ```
 go get github.com/wiesson/eb-export
+```
+
+or clone the repository into your gopath and install it manually
+
+```
 cd $GOPATH/src/github.com/wiesson/eb-export
 go install
 ```
