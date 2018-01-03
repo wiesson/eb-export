@@ -49,6 +49,6 @@ func main() {
 	// todo: fetching and writing with go channels to allow simulations requests
 	sensors, samples, data := apiHandler.FetchSamples()
 
-	writer := export.New(samples, sensors, data, apiConfig, *cmdFormat)
+	writer := export.New(samples, sensors, data, apiConfig)
 	writer.Write()
 }

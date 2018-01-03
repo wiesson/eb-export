@@ -21,8 +21,8 @@ type Export struct {
 	fileType        string
 }
 
-func New(samples api.Samples, selectedSensors []api.Sensor, data api.Data, apiConfig config.Config, fileType string) Export {
-	name := getFileName(apiConfig, fileType)
+func New(samples api.Samples, selectedSensors []api.Sensor, data api.Data, apiConfig config.Config) Export {
+	name := getFileName(apiConfig)
 
 	return Export{
 		energyTypes:     apiConfig.EnergyTypes,
@@ -30,7 +30,7 @@ func New(samples api.Samples, selectedSensors []api.Sensor, data api.Data, apiCo
 		data:            data,
 		selectedSensors: selectedSensors,
 		fileName:        name,
-		fileType:        fileType,
+		fileType:		 apiConfig.Format,
 	}
 }
 
@@ -106,7 +106,7 @@ func (e *Export) CSV() {
 	log.Printf("Created file: %s\n", e.fileName)
 }
 
-func getFileName(apiConfig config.Config, fileType string) string {
+func getFileName(apiConfig config.Config) string {
 	energyTypes := strings.Join(apiConfig.EnergyTypes, "-")
-	return fmt.Sprintf("%d_%d_%s_%s_%s.%s", apiConfig.TimeFrom.Unix(), apiConfig.TimeTo.Unix(), apiConfig.DataLogger, energyTypes, apiConfig.AggregationLevel, fileType)
+	return fmt.Sprintf("%d_%d_%s_%s_%s.%s", apiConfig.TimeFrom.Unix(), apiConfig.TimeTo.Unix(), apiConfig.DataLogger, energyTypes, apiConfig.AggregationLevel, apiConfig.Format)
 }
