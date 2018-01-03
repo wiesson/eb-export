@@ -17,12 +17,12 @@ func main() {
 	start := Bod(time.Now().AddDate(0, 0, -2))
 	to := start.AddDate(0, 0, 1)
 
-	cmdToken := flag.String("cmdToken", "", "Access cmdToken")
+	cmdToken := flag.String("token", "", "Access token")
 	cmdFrom := flag.String("from", start.Format("2006-1-2"), "The lower date")
 	cmdTo := flag.String("to", to.Format("2006-1-2"), "The upper date")
-	cmdLogger := flag.String("cmdLogger", "", "Id of the data-cmdLogger")
+	cmdLogger := flag.String("logger", "", "Id of the data-Logger")
 	cmdAggregationLevel := flag.String("aggr", "", "Aggregation level")
-	cmdFormat := flag.String("cmdFormat", "", "export json or csv")
+	cmdFormat := flag.String("format", "", "export format, json or csv")
 
 	var cmdInputSensors config.Flags
 	flag.Var(&cmdInputSensors, "sensor", "Id of the sensor")
@@ -45,6 +45,8 @@ func main() {
 
 	apiHandler := api.New(apiConfig)
 	apiHandler.FetchLogger()
+
+	// todo: fetching and writing with go channels to allow simulations requests
 	sensors, samples, data := apiHandler.FetchSamples()
 
 	writer := export.New(samples, sensors, data, apiConfig, *cmdFormat)
