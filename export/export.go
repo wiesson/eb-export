@@ -30,7 +30,7 @@ func New(samples api.Samples, selectedSensors []api.Sensor, data api.Data, apiCo
 		data:            data,
 		selectedSensors: selectedSensors,
 		fileName:        name,
-		fileType:		 apiConfig.Format,
+		fileType:        apiConfig.Format,
 	}
 }
 
@@ -67,14 +67,48 @@ func (e *Export) CSV() {
 	w := csv.NewWriter(file)
 
 	// timestamp, sensorIdA power, sensorIdA energy, sensorIdB power, sensorIdB energy
-	csvHeader := []string{"timestamp"}
+	csvHeaderSensorId := []string{"id"}
+	csvHeaderDescription := []string{"description"}
+	csvHeaderFunctionalArea := []string{"functional_area"}
+	csvHeaderRoom := []string{"room"}
+	csvHeaderEnergyType := []string{"timestamp"}
+
 	for _, sensor := range e.selectedSensors {
 		for _, energyType := range e.energyTypes {
-			csvHeader = append(csvHeader, fmt.Sprintf("%s %s", sensor.Id, energyType))
+			csvHeaderEnergyType = append(csvHeaderEnergyType, fmt.Sprintf("%s", energyType))
+		}
+
+		csvHeaderSensorId = append(csvHeaderSensorId, fmt.Sprintf("%s", sensor.Id))
+		csvHeaderDescription = append(csvHeaderDescription, fmt.Sprintf("%s", sensor.Description))
+		csvHeaderFunctionalArea = append(csvHeaderFunctionalArea, fmt.Sprintf("%s", sensor.FunctionalArea))
+		csvHeaderRoom = append(csvHeaderRoom, fmt.Sprintf("%s", sensor.Room))
+
+
+		for i := 0; i < len(e.energyTypes)-1; i++ {
+			csvHeaderSensorId = append(csvHeaderSensorId, fmt.Sprint(""))
+			csvHeaderDescription = append(csvHeaderDescription, fmt.Sprint(""))
+			csvHeaderFunctionalArea = append(csvHeaderFunctionalArea, fmt.Sprint(""))
+			csvHeaderRoom = append(csvHeaderRoom, fmt.Sprint(""))
 		}
 	}
 
-	if err := w.Write(csvHeader); err != nil {
+	if err := w.Write(csvHeaderSensorId); err != nil {
+		log.Fatalln("error writing header to csv:", err)
+	}
+
+	if err := w.Write(csvHeaderDescription); err != nil {
+		log.Fatalln("error writing header to csv:", err)
+	}
+
+	if err := w.Write(csvHeaderFunctionalArea); err != nil {
+		log.Fatalln("error writing header to csv:", err)
+	}
+
+	if err := w.Write(csvHeaderRoom); err != nil {
+		log.Fatalln("error writing header to csv:", err)
+	}
+
+	if err := w.Write(csvHeaderEnergyType); err != nil {
 		log.Fatalln("error writing header to csv:", err)
 	}
 
