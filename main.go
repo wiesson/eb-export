@@ -5,21 +5,15 @@ import (
 	"github.com/wiesson/eb-export/api"
 	"github.com/wiesson/eb-export/config"
 	"github.com/wiesson/eb-export/export"
-	"time"
 )
 
-func Bod(t time.Time) time.Time {
-	year, month, day := t.Date()
-	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
-}
-
 func main() {
-	start := Bod(time.Now().AddDate(0, 0, -2))
-	to := start.AddDate(0, 0, 1)
+	start := config.DefaultLowerTime()
+	to := config.DefaultUpperTime()
 
 	cmdToken := flag.String("token", "", "Access token")
-	cmdFrom := flag.String("from", start.Format("2006-1-2"), "The lower date")
-	cmdTo := flag.String("to", to.Format("2006-1-2"), "The upper date")
+	cmdFrom := flag.String("from", start.Format("2006-01-02"), "The lower date")
+	cmdTo := flag.String("to", to.Format("2006-01-02"), "The upper date")
 	cmdLogger := flag.String("logger", "", "Id of the data-Logger")
 	cmdAggregationLevel := flag.String("aggr", "", "Aggregation level")
 	cmdFormat := flag.String("format", "", "export format, json or csv")

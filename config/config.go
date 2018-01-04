@@ -60,9 +60,9 @@ func New(cmdToken, cmdDataLogger, cmdAggregation, cmdFrom, cmdTo, cmdFormat stri
 	}
 
 	if len(cmdInputSensors) > 0 {
-		log.Printf("You have entered %s %s %s and %d sensors\n", cmdTimeFrom, cmdTimeTo, cmdDataLogger, len(cmdInputSensors))
+		log.Printf("From: %s, To: %s, %s and %d sensors\n", cmdTimeFrom, cmdTimeTo, cmdDataLogger, len(cmdInputSensors))
 	} else {
-		log.Printf("You have entered %s %s %s and all sensors\n", cmdTimeFrom, cmdTimeTo, cmdDataLogger)
+		log.Printf("From: %s, To: %s, %s and all sensors\n", cmdTimeFrom, cmdTimeTo, cmdDataLogger)
 	}
 
 	return Config{
@@ -112,4 +112,18 @@ func completeDate(date string) string {
 		return date + "T00:00:00"
 	}
 	return date
+}
+
+// Bod returns the beginning of a day
+func Bod(t time.Time) time.Time {
+	year, month, day := t.Date()
+	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+}
+
+func DefaultLowerTime() time.Time {
+	return Bod(time.Now().AddDate(0, 0, -2))
+}
+
+func DefaultUpperTime() time.Time {
+	return DefaultLowerTime().AddDate(0, 0, 1)
 }
