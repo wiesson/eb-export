@@ -61,10 +61,15 @@ type responseLoggerData struct {
 }
 
 type Sensor struct {
-	Id          string `json:"sensor_id"`
-	Type        string `json:"type"`
-	Phase       int64  `json:"phase"`
-	Description string `json:"description"`
+	Id             string `json:"sensor_id"`
+	Type           string `json:"type"`
+	Phase          int64  `json:"phase"`
+	Description    string `json:"description"`
+	BuildingFloor  string `json:"building_floor"`
+	FunctionalArea string `json:"functional_area"`
+	Room           string `json:"room"`
+	EquipmentGroup string `json:"equipment_group"`
+	EquipmentType  string `json:"equipment_type"`
 }
 
 type samplesResponse struct {
@@ -86,8 +91,8 @@ type responseSampleData struct {
 }
 
 type responseSample struct {
-	Id string  `json:"sensor_id"`
-	Value    float64 `json:"value"`
+	Id    string  `json:"sensor_id"`
+	Value float64 `json:"value"`
 }
 
 type Sample struct {
@@ -125,14 +130,14 @@ func (d *Data) addReading(value responseSampleData, sensors []Sensor, energyType
 				var v float64
 				v = sample.Value
 				row.Readings[sample.Id][energyType] = &v
-		}
+			}
 
 		case "energy":
 			for _, sample := range value.Attributes.EnergyResponseSamples {
 				var v float64
 				v = sample.Value
 				row.Readings[sample.Id][energyType] = &v
-		}
+			}
 
 		case "current":
 			for _, sample := range value.Attributes.CurrentResponseSamples {
