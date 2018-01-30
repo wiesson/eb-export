@@ -6,13 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/wiesson/eb-export/config"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
-	"io"
 )
 
 const baseUrl = "https://api.internetofefficiency.com"
@@ -46,8 +46,8 @@ type loggerResponse struct {
 }
 
 type responseLoggerData struct {
-	Type string `json:"type"`
-	Id   string `json:"id"`
+	Type       string `json:"type"`
+	Id         string `json:"id"`
 	Attributes struct {
 		Description     string   `json:"description"`
 		Building        string   `json:"building"`
@@ -73,15 +73,15 @@ type Sensor struct {
 }
 
 type samplesResponse struct {
-	Data []responseSampleData `json:"data"`
+	Data  []responseSampleData `json:"data"`
 	Links struct {
 		NextURL string `json:"next"`
 	} `json:"links"`
 }
 
 type responseSampleData struct {
-	Type string `json:"type"`
-	Id   string `json:"id"`
+	Type       string `json:"type"`
+	Id         string `json:"id"`
 	Attributes struct {
 		Timestamp              int64            `json:"timestamp"`
 		PowerResponseSamples   []responseSample `json:"power"`
@@ -295,7 +295,7 @@ func (a *api) getSamplesParameters(path string, start, end time.Time) string {
 	fields := []string{"timestamp", strings.Join(a.config.EnergyTypes, ",")}
 
 	payload := url.Values{}
-	payload.Set("aggregation_level", a.config.AggregationLevel)
+	payload.Set("aggregation_level", a.config.Aggregation.Level)
 	payload.Add("filter[from]", strconv.FormatInt(start.Unix(), 10))
 	payload.Add("filter[to]", strconv.FormatInt(end.Unix(), 10))
 	payload.Add("filter[data_logger]", a.config.DataLogger)

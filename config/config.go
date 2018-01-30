@@ -7,9 +7,20 @@ import (
 	"time"
 )
 
-var aggregationLevels = []string{"none", "minutes_1", "minutes_15", "hours_1", "days_1"}
 var exportFileFormats = []string{"json", "csv"}
 var defaultEnergyType = []string{"power"}
+
+type Aggregation struct {
+	Level string
+	time.Duration
+}
+
+var aggregationTypes = map[string]Aggregation{
+	"none":      {"none", time.Second * 2},
+	"minutes_1": {"minutes_1", time.Minute},
+	"hours_1":   {"hours_1", time.Hour},
+	"days_1":    {"days_1", time.Hour * 24},
+}
 
 // Config contains the configuration
 type Config struct {
@@ -21,6 +32,8 @@ type Config struct {
 	TimeTo           time.Time
 	AggregationLevel string
 	Format           string
+	Interval         time.Duration
+	Aggregation
 }
 
 // New returns a new instance of Config
@@ -30,8 +43,9 @@ func New(cmdToken, cmdDataLogger, cmdAggregation, cmdFrom, cmdTo, cmdFormat stri
 		os.Exit(1)
 	}
 
-	if inSlice(cmdAggregation, aggregationLevels) == false {
-		cmdAggregation = aggregationLevels[1]
+	aggregation, ok := aggregationTypes[cmdAggregation]
+	if ok != false {
+		aggregation = aggregationTypes["minutes_1"]
 	}
 
 	if cmdFormat == "" {
@@ -53,7 +67,6 @@ func New(cmdToken, cmdDataLogger, cmdAggregation, cmdFrom, cmdTo, cmdFormat stri
 		log.Fatal("could not parse to date")
 		os.Exit(1)
 	}
-
 	if cmdTimeTo.Before(cmdTimeFrom) {
 		log.Fatal("from date is before to date")
 		os.Exit(1)
@@ -66,14 +79,14 @@ func New(cmdToken, cmdDataLogger, cmdAggregation, cmdFrom, cmdTo, cmdFormat stri
 	}
 
 	return Config{
-		AccessToken:      cmdToken,
-		Format:           cmdFormat,
-		DataLogger:       cmdDataLogger,
-		EnergyTypes:      cmdEnergyTypes,
-		InputSensors:     cmdInputSensors,
-		TimeFrom:         cmdTimeFrom,
-		TimeTo:           cmdTimeTo,
-		AggregationLevel: cmdAggregation,
+		AccessToken:  cmdToken,
+		Format:       cmdFormat,
+		DataLogger:   cmdDataLogger,
+		EnergyTypes:  cmdEnergyTypes,
+		InputSensors: cmdInputSensors,
+		TimeFrom:     cmdTimeFrom,
+		TimeTo:       cmdTimeTo,
+		Aggregation:  aggregation,
 	}
 }
 
@@ -95,15 +108,6 @@ func (f *Flags) Slice() []string {
 		slice = append(*f, item)
 	}
 	return slice
-}
-
-func inSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }
 
 func completeDate(date string) string {
