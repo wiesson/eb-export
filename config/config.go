@@ -30,9 +30,7 @@ type Config struct {
 	InputSensors     []string
 	TimeFrom         time.Time
 	TimeTo           time.Time
-	AggregationLevel string
 	Format           string
-	Interval         time.Duration
 	Aggregation
 }
 
@@ -44,7 +42,7 @@ func New(cmdToken, cmdDataLogger, cmdAggregation, cmdFrom, cmdTo, cmdFormat stri
 	}
 
 	aggregation, ok := aggregationTypes[cmdAggregation]
-	if ok != false {
+	if ok != true {
 		aggregation = aggregationTypes["minutes_1"]
 	}
 
