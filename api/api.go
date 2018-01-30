@@ -152,7 +152,12 @@ func (d *Data) addReading(value responseSampleData, sensors []Sensor, energyType
 }
 
 func (a *api) FetchLogger() []Sensor {
-	loggerResponse, _ := a.getLogger()
+	loggerResponse, err := a.getLogger()
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	a.Logger.Id = loggerResponse.Data.Id
 	a.Logger.Description = loggerResponse.Data.Attributes.Description
 	a.Logger.Building = loggerResponse.Data.Attributes.Building
@@ -230,9 +235,12 @@ func (a *api) getLogger() (loggerResponse, error) {
 	}
 	defer res.Body.Close()
 
-	// log.Printf("%v\n", res)
-
 	var body io.ReadCloser
+
+	if res.StatusCode == 401 {
+		return loggerResponse{}, fmt.Errorf("token expired or not authorized")
+	}
+
 	switch res.Header.Get("Content-Encoding") {
 	case "gzip":
 		body, err = gzip.NewReader(res.Body)
@@ -264,7 +272,9 @@ func (a *api) getSamples(requestUrl string) (samplesResponse, error) {
 	}
 	defer res.Body.Close()
 
-	// log.Printf("%v\n", res)
+	if res.StatusCode == 401 {
+		return samplesResponse{}, fmt.Errorf("token expired or not authorized")
+	}
 
 	var body io.ReadCloser
 	switch res.Header.Get("Content-Encoding") {
@@ -305,7 +315,7 @@ func (a *api) getSamplesParameters(path string, start, end time.Time) string {
 		payload.Add("filter[sensor]", strings.Join(a.config.InputSensors, ","))
 	}
 
-	return "/v2/samples/?" + payload.Encode()
+	return "/v2/samples?" + payload.Encode()
 }
 
 func (a *api) NewGetRequest(requestUrl string) (*http.Request, error) {
