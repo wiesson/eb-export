@@ -12,7 +12,7 @@ var defaultEnergyType = []string{"power"}
 
 type Aggregation struct {
 	Level string
-	time.Duration
+	Interval time.Duration
 }
 
 var aggregationTypes = map[string]Aggregation{
@@ -54,13 +54,13 @@ func New(cmdToken, cmdDataLogger, cmdAggregation, cmdFrom, cmdTo, cmdFormat stri
 		cmdEnergyTypes = defaultEnergyType
 	}
 
-	cmdTimeFrom, err := time.Parse("2006-1-2T15:04:05", completeDate(cmdFrom))
+	cmdTimeFrom, err := time.Parse(time.RFC3339, completeDate(cmdFrom))
 	if err != nil {
 		log.Fatal("could not parse from date")
 		os.Exit(1)
 	}
 
-	cmdTimeTo, err := time.Parse("2006-1-2T15:04:05", completeDate(cmdTo))
+	cmdTimeTo, err := time.Parse(time.RFC3339, completeDate(cmdTo))
 	if err != nil {
 		log.Fatal("could not parse to date")
 		os.Exit(1)
@@ -111,7 +111,7 @@ func (f *Flags) Slice() []string {
 func completeDate(date string) string {
 	length := len(date)
 	if length == 10 {
-		return date + "T00:00:00"
+		return date + "T00:00:00+00:00"
 	}
 	return date
 }
