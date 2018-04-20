@@ -11,7 +11,6 @@ func main() {
 	start := config.DefaultLowerTime()
 	to := config.DefaultUpperTime()
 
-	cmdToken := flag.String("token", "", "Access token")
 	cmdFrom := flag.String("from", start.Format("2006-01-02"), "The lower date")
 	cmdTo := flag.String("to", to.Format("2006-01-02"), "The upper date")
 	cmdLogger := flag.String("logger", "", "Id of the data-Logger")
@@ -27,7 +26,6 @@ func main() {
 	flag.Parse()
 
 	apiConfig := config.New(
-		*cmdToken,
 		*cmdLogger,
 		*cmdAggregationLevel,
 		*cmdFrom,

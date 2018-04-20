@@ -200,6 +200,8 @@ func (a *api) FetchSamples() ([]Sensor, Samples, Data) {
 				log.Fatal(err)
 			}
 
+			log.Printf("Received %d", len(res.Data))
+
 			logMessage, err := url.ParseQuery(nextUrl)
 			offset := logMessage.Get("page[offset]")
 

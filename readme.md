@@ -16,21 +16,17 @@ cd $GOPATH/src/github.com/wiesson/eb-export
 go install
 ```
 
-#### Binaries
+#### Env Vars
 
-Coming soon
+export EB_ACCESS_TOKEN=<your_access_token>
 
 ### arguments
 
 Example
 
 ```
-eb-export -token <your-access-token> -from 2017-08-01 -to 2017-09-26 -logger 01234567 -sensor 12345678 -sensor 23456789 -sensor 34567890 -sensor 45678901 -aggr minutes_1 -type energy
+eb-export -from 2017-08-01 -to 2017-09-26 -logger 01234567 -sensor 12345678 -sensor 23456789 -sensor 34567890 -sensor 45678901 -aggr minutes_1 -type energy
 ```
-
-#### -token\*
-
-example: `-token <your-access-token>`
 
 #### -from\*
 

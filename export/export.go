@@ -1,15 +1,15 @@
 package export
 
 import (
+	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"github.com/wiesson/eb-export/api"
 	"github.com/wiesson/eb-export/config"
 	"log"
 	"os"
-	"encoding/json"
-	"strings"
-	"encoding/csv"
 	"strconv"
+	"strings"
 )
 
 type Export struct {
@@ -67,11 +67,11 @@ func (e *Export) CSV() {
 	w := csv.NewWriter(file)
 
 	// timestamp, sensorIdA power, sensorIdA energy, sensorIdB power, sensorIdB energy
+	csvHeaderEnergyType := []string{"timestamp"}
 	csvHeaderSensorId := []string{"id"}
 	csvHeaderDescription := []string{"description"}
 	csvHeaderFunctionalArea := []string{"functional_area"}
 	csvHeaderRoom := []string{"room"}
-	csvHeaderEnergyType := []string{"timestamp"}
 
 	for _, sensor := range e.selectedSensors {
 		for _, energyType := range e.energyTypes {
@@ -82,7 +82,6 @@ func (e *Export) CSV() {
 		csvHeaderDescription = append(csvHeaderDescription, fmt.Sprintf("%s", sensor.Description))
 		csvHeaderFunctionalArea = append(csvHeaderFunctionalArea, fmt.Sprintf("%s", sensor.FunctionalArea))
 		csvHeaderRoom = append(csvHeaderRoom, fmt.Sprintf("%s", sensor.Room))
-
 
 		for i := 0; i < len(e.energyTypes)-1; i++ {
 			csvHeaderSensorId = append(csvHeaderSensorId, fmt.Sprint(""))

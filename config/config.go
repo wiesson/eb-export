@@ -11,7 +11,7 @@ var exportFileFormats = []string{"json", "csv"}
 var defaultEnergyType = []string{"power"}
 
 type Aggregation struct {
-	Level string
+	Level    string
 	Interval time.Duration
 }
 
@@ -24,18 +24,19 @@ var aggregationTypes = map[string]Aggregation{
 
 // Config contains the configuration
 type Config struct {
-	AccessToken      string
-	DataLogger       string
-	EnergyTypes      []string
-	InputSensors     []string
-	TimeFrom         time.Time
-	TimeTo           time.Time
-	Format           string
+	AccessToken  string
+	DataLogger   string
+	EnergyTypes  []string
+	InputSensors []string
+	TimeFrom     time.Time
+	TimeTo       time.Time
+	Format       string
 	Aggregation
 }
 
 // New returns a new instance of Config
-func New(cmdToken, cmdDataLogger, cmdAggregation, cmdFrom, cmdTo, cmdFormat string, cmdInputSensors, cmdEnergyTypes []string) Config {
+func New(cmdDataLogger, cmdAggregation, cmdFrom, cmdTo, cmdFormat string, cmdInputSensors, cmdEnergyTypes []string) Config {
+	cmdToken := os.Getenv("EB_ACCESS_TOKEN")
 	if cmdToken == "" {
 		log.Fatal("No access token given.")
 		os.Exit(1)
