@@ -18,7 +18,9 @@ go install
 
 #### Env Vars
 
+```
 export EB_ACCESS_TOKEN=<your_access_token>
+```
 
 ### arguments
 
